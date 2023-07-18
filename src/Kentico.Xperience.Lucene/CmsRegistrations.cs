@@ -30,7 +30,7 @@ using Kentico.Xperience.Lucene.Services.Implementations;
 
 // Default service implementations
 [assembly: RegisterImplementation(typeof(ILuceneClient), typeof(DefaultLuceneClient), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
-[assembly: RegisterImplementation(typeof(ILuceneObjectGenerator), typeof(DefaultLuceneObjectGenerator), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
+[assembly: RegisterImplementation(typeof(ILuceneModelGenerator), typeof(DefaultLuceneModelGenerator), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
 [assembly: RegisterImplementation(typeof(ILuceneTaskLogger), typeof(DefaultLuceneTaskLogger), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
 [assembly: RegisterImplementation(typeof(ILuceneTaskProcessor), typeof(DefaultLuceneTaskProcessor), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
 [assembly: RegisterImplementation(typeof(ILuceneSearchModelToDocumentMapper), typeof(DefaultLuceneSearchModelToDocumentMapper), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]

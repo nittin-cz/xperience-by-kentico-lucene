@@ -18,7 +18,7 @@ namespace Kentico.Xperience.Lucene.Services
     internal class DefaultLuceneTaskProcessor : ILuceneTaskProcessor
     {
         private readonly ILuceneClient luceneClient;
-        private readonly ILuceneObjectGenerator luceneObjectGenerator;
+        private readonly ILuceneModelGenerator luceneObjectGenerator;
         private readonly IEventLogService eventLogService;
         private readonly IWorkflowStepInfoProvider workflowStepInfoProvider;
         private readonly IVersionHistoryInfoProvider versionHistoryInfoProvider;
@@ -28,7 +28,7 @@ namespace Kentico.Xperience.Lucene.Services
             IEventLogService eventLogService,
             IWorkflowStepInfoProvider workflowStepInfoProvider,
             IVersionHistoryInfoProvider versionHistoryInfoProvider,
-            ILuceneObjectGenerator luceneObjectGenerator)
+            ILuceneModelGenerator luceneObjectGenerator)
         {
             this.luceneClient = luceneClient;
             this.eventLogService = eventLogService;

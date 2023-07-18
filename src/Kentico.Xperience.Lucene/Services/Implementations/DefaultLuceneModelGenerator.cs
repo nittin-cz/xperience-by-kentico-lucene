@@ -20,9 +20,9 @@ using Newtonsoft.Json.Linq;
 namespace Kentico.Xperience.Lucene.Services
 {
     /// <summary>
-    /// Default implementation of <see cref="ILuceneObjectGenerator"/>.
+    /// Default implementation of <see cref="ILuceneModelGenerator"/>.
     /// </summary>
-    internal class DefaultLuceneObjectGenerator : ILuceneObjectGenerator
+    internal class DefaultLuceneModelGenerator : ILuceneModelGenerator
     {
         private readonly IConversionService conversionService;
         private readonly IEventLogService eventLogService;
@@ -36,9 +36,9 @@ namespace Kentico.Xperience.Lucene.Services
         };
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DefaultLuceneObjectGenerator"/> class.
+        /// Initializes a new instance of the <see cref="DefaultLuceneModelGenerator"/> class.
         /// </summary>
-        public DefaultLuceneObjectGenerator(IConversionService conversionService,
+        public DefaultLuceneModelGenerator(IConversionService conversionService,
             IEventLogService eventLogService,
             IMediaFileInfoProvider mediaFileInfoProvider,
             IMediaFileUrlRetriever mediaFileUrlRetriever)
@@ -85,7 +85,7 @@ namespace Kentico.Xperience.Lucene.Services
             var field = formInfo.GetFormField(columnName);
             if (field == null)
             {
-                eventLogService.LogError(nameof(DefaultLuceneObjectGenerator), nameof(GetAssetUrlsForColumn), $"Unable to load field definition for content type '{node.ClassName}' column name '{columnName}.'");
+                eventLogService.LogError(nameof(DefaultLuceneModelGenerator), nameof(GetAssetUrlsForColumn), $"Unable to load field definition for content type '{node.ClassName}' column name '{columnName}.'");
                 return Enumerable.Empty<string>();
             }
 
@@ -224,7 +224,8 @@ namespace Kentico.Xperience.Lucene.Services
                 {
                     continue;
                 }
-
+ 
+                // TODO: map based on PropertyType
                 if (Attribute.IsDefined(prop, typeof(TextFieldAttribute)))
                 {
                     prop.SetValue(data, nodeValue.ToString());

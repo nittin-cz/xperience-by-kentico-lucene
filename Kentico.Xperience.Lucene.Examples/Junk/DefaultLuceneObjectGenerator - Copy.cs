@@ -20,7 +20,7 @@ using Newtonsoft.Json.Linq;
 namespace Kentico.Xperience.Lucene.Services
 {
     /// <summary>
-    /// Default implementation of <see cref="ILuceneObjectGenerator"/>.
+    /// Default implementation of <see cref="ILuceneModelGenerator"/>.
     /// </summary>
     internal class DefaultLuceneObjectGeneratorBak //: ILuceneObjectGenerator
     {

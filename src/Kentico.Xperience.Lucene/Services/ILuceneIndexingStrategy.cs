@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Kentico.Xperience.Lucene.Services
 {
-    public interface IIndexingStrategy<TModel> where TModel : LuceneSearchModel
+    public interface ILuceneIndexingStrategy
     {
         /// <summary>
         /// Called when indexing a search model property. Does not trigger when indexing the
@@ -28,15 +28,6 @@ namespace Kentico.Xperience.Lucene.Services
         /// <param name="node">The <see cref="TreeNode"/> currently being indexed.</param>
         /// <param name="model">The resulting search data <see cref="LuceneSearchModel"/> to be modified. The model could be changed during the process.</param>
         /// <returns>Modified Lucene document.</returns>
-        Task<TModel> OnIndexingNode(TreeNode node, TModel model);
-
-        /// <summary>
-        /// Called when indexing a search model. Enables overriding of multiple fields with custom data.
-        /// </summary>
-        /// <param name="node">The <see cref="TreeNode"/> currently being indexed.</param>
-        /// <param name="model">The resulting search data model to be modified. The model could be changed during the process.</param>
-        /// <param name="document">The resulting Lucene document to be modified. The document could be changed during the process</param>
-        /// <returns>Modified Lucene document.</returns>
-        Task<Document> OnTransformingToLuceneDocument(TreeNode node, TModel model, Document document);
+        Task<LuceneSearchModel> OnIndexingNode(TreeNode node, LuceneSearchModel model);
     }
 }

@@ -26,6 +26,14 @@ namespace Kentico.Xperience.Lucene.Models
             get;
         }
 
+        /// <summary>
+        /// The type of the class which extends <see cref="ILuceneIndexingStrategy"/>.
+        /// </summary>
+        public ILuceneIndexingStrategy LuceneIndexingStrategy
+        {
+            get;
+        }
+
 
         /// <summary>
         /// The code name of the Lucene index.
@@ -71,9 +79,10 @@ namespace Kentico.Xperience.Lucene.Models
         /// <param name="analyzer">Lucene Analyzer instance <see cref="Analyzer"/>.</param>
         /// <param name="indexName">The code name of the Lucene index.</param>
         /// <param name="indexPath">The filesystem Lucene index. Defaults to /App_Data/LuceneSearch/[IndexName]</param>
+        /// <param name="luceneIndexingStrategy">Defaults to  <see cref="DefaultLuceneIndexingStrategy"/></param>
         /// <exception cref="ArgumentNullException" />
         /// <exception cref="InvalidOperationException" />
-        public LuceneIndex(Type type, Analyzer analyzer, string indexName, string indexPath = null, ILuceneSearchModelToDocumentMapper modelToLuceneDocumentMapper = null)
+        public LuceneIndex(Type type, Analyzer analyzer, string indexName, string indexPath = null, ILuceneIndexingStrategy luceneIndexingStrategy = null)
         {
             if (String.IsNullOrEmpty(indexName))
             {
@@ -99,7 +108,7 @@ namespace Kentico.Xperience.Lucene.Models
             LuceneSearchModelType = type;
             IndexName = indexName;
             IndexPath = indexPath ?? Path.Combine(Environment.CurrentDirectory, "App_Data", "LuceneSearch", indexName);
-
+            LuceneIndexingStrategy = luceneIndexingStrategy ?? new DefaultLuceneIndexingStrategy();
         }
     }
 }
