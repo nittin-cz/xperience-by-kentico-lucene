@@ -56,9 +56,9 @@ namespace Kentico.Xperience.Lucene.Services
             var luceneIndex = IndexStore.Instance.GetIndex(queueItem.IndexName);
 
             var data =  Activator.CreateInstance(luceneIndex.LuceneSearchModelType) as LuceneSearchModel;
-            await MapChangedProperties(queueItem, data);
+            await MapChangedProperties(luceneIndex, queueItem, data);
             MapCommonProperties(queueItem.Node, data);
-
+            data = await luceneIndex.LuceneIndexingStrategy.OnIndexingNode(queueItem.Node, data);
             return data;
         }
 
@@ -110,17 +110,16 @@ namespace Kentico.Xperience.Lucene.Services
         /// Gets the names of all database columns which are indexed by the passed index,
         /// minus those listed in <see cref="ignoredPropertiesForTrackingChanges"/>.
         /// </summary>
-        /// <param name="indexName">The index to load columns for.</param>
+        /// <param name="luceneIndex">The index to load columns for.</param>
         /// <returns>The database columns that are indexed.</returns>
-        private string[] GetIndexedColumnNames(string indexName)
+        private string[] GetIndexedColumnNames(LuceneIndex luceneIndex)
         {
-            if (cachedIndexedColumns.TryGetValue(indexName, out string[] value))
+            if (cachedIndexedColumns.TryGetValue(luceneIndex.IndexName, out string[] value))
             {
                 return value;
             }
 
             // Don't include properties with SourceAttribute at first, check the sources and add to list after
-            var luceneIndex = IndexStore.Instance.GetIndex(indexName);
             var indexedColumnNames = luceneIndex.LuceneSearchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(prop => !Attribute.IsDefined(prop, typeof(SourceAttribute))).Select(prop => prop.Name).ToList();
             var propertiesWithSourceAttribute = luceneIndex.LuceneSearchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
@@ -140,7 +139,7 @@ namespace Kentico.Xperience.Lucene.Services
             indexedColumnNames.RemoveAll(col => ignoredPropertiesForTrackingChanges.Contains(col));
 
             var indexedColumns = indexedColumnNames.ToArray();
-            cachedIndexedColumns.Add(indexName, indexedColumns);
+            cachedIndexedColumns.Add(luceneIndex.IndexName, indexedColumns);
 
             return indexedColumns;
         }
@@ -152,10 +151,10 @@ namespace Kentico.Xperience.Lucene.Services
         /// </summary>
         /// <param name="node">The <see cref="TreeNode"/> to load a value from.</param>
         /// <param name="property">The Lucene search model property.</param>
-        /// <param name="searchModelType">The Lucene search model.</param>
+        /// <param name="indexingStrategy">The indexing strategy.</param>
         /// <param name="columnsToUpdate">A list of columns to retrieve values for. Columns not present
         /// in this list will return <c>null</c>.</param>
-        private async Task<object> GetNodeValue(TreeNode node, PropertyInfo property, Type searchModelType, IEnumerable<string> columnsToUpdate)
+        private async Task<object> GetNodeValue(TreeNode node, PropertyInfo property, ILuceneIndexingStrategy indexingStrategy, IEnumerable<string> columnsToUpdate)
         {
             object nodeValue = null;
             var usedColumn = property.Name;
@@ -189,8 +188,7 @@ namespace Kentico.Xperience.Lucene.Services
                 nodeValue = GetAssetUrlsForColumn(node, nodeValue, usedColumn);
             }
 
-            var searchModel = Activator.CreateInstance(searchModelType) as LuceneSearchModel;
-            nodeValue = await searchModel.OnIndexingProperty(node, property.Name, usedColumn, nodeValue);
+            nodeValue = await indexingStrategy.OnIndexingProperty(node, property.Name, usedColumn, nodeValue);
 
             return nodeValue;
         }
@@ -202,10 +200,10 @@ namespace Kentico.Xperience.Lucene.Services
         /// is <see cref="LuceneTaskType.UPDATE"/>, only the <see cref="LuceneQueueItem.ChangedColumns"/>
         /// will be added to the <paramref name="data"/>.
         /// </summary>
-        private async Task MapChangedProperties(LuceneQueueItem queueItem, LuceneSearchModel data)
+        private async Task MapChangedProperties(LuceneIndex luceneIndex, LuceneQueueItem queueItem, LuceneSearchModel data)
         {
             var columnsToUpdate = new List<string>();
-            var indexedColumns = GetIndexedColumnNames(queueItem.IndexName);
+            var indexedColumns = GetIndexedColumnNames(luceneIndex);
             if (queueItem.TaskType == LuceneTaskType.CREATE || queueItem.TaskType == LuceneTaskType.UPDATE)
             {
                 columnsToUpdate.AddRange(indexedColumns);
@@ -215,11 +213,10 @@ namespace Kentico.Xperience.Lucene.Services
             //    columnsToUpdate.AddRange(queueItem.ChangedColumns.Intersect(indexedColumns));
             //}
 
-            var luceneIndex = IndexStore.Instance.GetIndex(queueItem.IndexName);
             var properties = luceneIndex.LuceneSearchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             foreach (var prop in properties)
             {
-                object nodeValue = await GetNodeValue(queueItem.Node, prop, luceneIndex.LuceneSearchModelType, columnsToUpdate);
+                object nodeValue = await GetNodeValue(queueItem.Node, prop, luceneIndex.LuceneIndexingStrategy, columnsToUpdate);
                 if (nodeValue == null)
                 {
                     continue;
