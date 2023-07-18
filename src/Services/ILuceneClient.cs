@@ -47,7 +47,7 @@ namespace Kentico.Xperience.Lucene.Services
         /// <exception cref="ObjectDisposedException" />
         /// <exception cref="OverflowException" />
         /// <returns>The number of objects processed.</returns>
-        Task<int> UpsertRecords(IEnumerable<LuceneDocument> dataObjects, string indexName, CancellationToken cancellationToken);
+        Task<int> UpsertRecords(IEnumerable<LuceneSearchModel> dataObjects, string indexName, CancellationToken cancellationToken);
 
 
         /// <summary>

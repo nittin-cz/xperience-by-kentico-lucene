@@ -58,7 +58,7 @@ namespace Kentico.Xperience.Lucene.Admin
             properties.PathRows = indexToDisplay.IncludedPaths.Select(attr => GetPath(attr));
             properties.PathColumns = GetPathColumns();
 
-            var searchModelProperties = indexToDisplay.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+            var searchModelProperties = indexToDisplay.LuceneSearchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
             properties.PropertyRows = searchModelProperties.Select(prop => GetProperty(prop));
             properties.PropertyColumns = GetPropertyColumns();
 

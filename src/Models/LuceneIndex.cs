@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.IO;
 using Kentico.Xperience.Lucene.Attributes;
+using Kentico.Xperience.Lucene.Services;
+using Kentico.Xperience.Lucene.Services.Implementations;
+using Lucene.Net.Analysis;
 
 namespace Kentico.Xperience.Lucene.Models
 {
@@ -11,9 +14,14 @@ namespace Kentico.Xperience.Lucene.Models
     public sealed class LuceneIndex
     {
         /// <summary>
+        /// Lucene Analyzer instance <see cref="Analyzer"/>.
+        /// </summary>
+        public Analyzer Analyzer { get; }
+
+        /// <summary>
         /// The type of the class which extends <see cref="LuceneSearchModel"/>.
         /// </summary>
-        public Type Type
+        public Type LuceneSearchModelType
         {
             get;
         }
@@ -23,6 +31,14 @@ namespace Kentico.Xperience.Lucene.Models
         /// The code name of the Lucene index.
         /// </summary>
         public string IndexName
+        {
+            get;
+        }
+
+        /// <summary>
+        /// The filesystem path of the Lucene index.
+        /// </summary>
+        public string IndexPath
         {
             get;
         }
@@ -52,10 +68,12 @@ namespace Kentico.Xperience.Lucene.Models
         /// Initializes a new <see cref="LuceneIndex"/>.
         /// </summary>
         /// <param name="type">The type of the class which extends <see cref="LuceneSearchModel"/>.</param>
+        /// <param name="analyzer">Lucene Analyzer instance <see cref="Analyzer"/>.</param>
         /// <param name="indexName">The code name of the Lucene index.</param>
+        /// <param name="indexPath">The filesystem Lucene index. Defaults to /App_Data/LuceneSearch/[IndexName]</param>
         /// <exception cref="ArgumentNullException" />
         /// <exception cref="InvalidOperationException" />
-        public LuceneIndex(Type type, string indexName)
+        public LuceneIndex(Type type, Analyzer analyzer, string indexName, string indexPath = null, ILuceneSearchModelToDocumentMapper modelToLuceneDocumentMapper = null)
         {
             if (String.IsNullOrEmpty(indexName))
             {
@@ -67,13 +85,21 @@ namespace Kentico.Xperience.Lucene.Models
                 throw new ArgumentNullException(nameof(type));
             }
 
+            if (analyzer == null)
+            {
+                throw new ArgumentNullException(nameof(analyzer));
+            }
+
             if (!typeof(LuceneSearchModel).IsAssignableFrom(type))
             {
                 throw new InvalidOperationException($"The search model {type} must extend {nameof(LuceneSearchModel)}.");
             }
 
-            Type = type;
+            Analyzer = analyzer;
+            LuceneSearchModelType = type;
             IndexName = indexName;
+            IndexPath = indexPath ?? Path.Combine(Environment.CurrentDirectory, "App_Data", "LuceneSearch", indexName);
+
         }
     }
 }

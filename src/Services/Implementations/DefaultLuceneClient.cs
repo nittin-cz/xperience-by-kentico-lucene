@@ -26,8 +26,8 @@ namespace Kentico.Xperience.Lucene.Services
     internal class DefaultLuceneClient : ILuceneClient
     {
         private readonly ILuceneIndexService luceneIndexService;
+        private readonly ILuceneSearchModelToDocumentMapper luceneSearchModelToDocumentMapper;
 
-        private readonly HttpClient httpClient;
         private readonly ICacheAccessor cacheAccessor;
         private readonly IEventLogService eventLogService;
         private readonly IPageRetriever pageRetriever;
@@ -36,23 +36,23 @@ namespace Kentico.Xperience.Lucene.Services
 
         internal const string CACHEKEY_STATISTICS = "Lucene|ListIndices";
 
-
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultLuceneClient"/> class.
         /// </summary>
-        public DefaultLuceneClient(HttpClient httpClient,
+        public DefaultLuceneClient(
             ICacheAccessor cacheAccessor,
             IEventLogService eventLogService,
             IPageRetriever pageRetriever,
             IProgressiveCache progressiveCache,
-            ILuceneIndexService luceneIndexService)
+            ILuceneIndexService luceneIndexService,
+            ILuceneSearchModelToDocumentMapper luceneSearchModelToDocumentMapper)
         {
-            this.httpClient = httpClient;
             this.cacheAccessor = cacheAccessor;
             this.eventLogService = eventLogService;
             this.pageRetriever = pageRetriever;
             this.progressiveCache = progressiveCache;
             this.luceneIndexService = luceneIndexService;
+            this.luceneSearchModelToDocumentMapper = luceneSearchModelToDocumentMapper;
 
             //// Initialize HttpClient used for crawler requests if a crawler is registered
             //if (IndexStore.Instance.GetAllCrawlers().Any())
@@ -83,7 +83,15 @@ namespace Kentico.Xperience.Lucene.Services
         /// <inheritdoc/>
         public async Task<ICollection<LuceneIndexStatisticsViewModel>> GetStatistics(CancellationToken cancellationToken)
         {
-            return new List<LuceneIndexStatisticsViewModel>();
+            return IndexStore.Instance.GetAllIndexes().Select(i => {
+                var statistics = luceneIndexService.UseSearcher(i, s => new LuceneIndexStatisticsViewModel()
+                {
+                    Name = i.IndexName,
+                    Entries = s.IndexReader.NumDocs,
+                });
+                return statistics;
+            }).ToList();
+            //return new List<LuceneIndexStatisticsViewModel>();
             //return await progressiveCache.LoadAsync(async (cs, ct) => {
             //    var response = await searchClient.ListIndicesAsync(ct: ct).ConfigureAwait(false);
             //    return response.Items;
@@ -110,7 +118,7 @@ namespace Kentico.Xperience.Lucene.Services
 
 
         /// <inheritdoc />
-        public Task<int> UpsertRecords(IEnumerable<LuceneDocument> dataObjects, string indexName, CancellationToken cancellationToken)
+        public Task<int> UpsertRecords(IEnumerable<LuceneSearchModel> dataObjects, string indexName, CancellationToken cancellationToken)
         {
             if (String.IsNullOrEmpty(indexName))
             {
@@ -167,7 +175,7 @@ namespace Kentico.Xperience.Lucene.Services
 
                     q.AllCultures();
                 }, cancellationToken: cancellationToken);
-                    
+
                 indexedNodes.AddRange(nodes);
             }
 
@@ -179,7 +187,7 @@ namespace Kentico.Xperience.Lucene.Services
             indexedNodes.ForEach(node => LuceneQueueWorker.EnqueueLuceneQueueItem(new LuceneQueueItem(node, LuceneTaskType.CREATE, luceneIndex.IndexName)));
         }
 
-        private async Task<int> UpsertRecordsInternal(IEnumerable<LuceneDocument> dataObjects, string indexName, CancellationToken cancellationToken)
+        private async Task<int> UpsertRecordsInternal(IEnumerable<LuceneSearchModel> dataObjects, string indexName, CancellationToken cancellationToken)
         {
             //var searchIndex = await luceneIndexService.InitializeIndex(indexName, cancellationToken);
             var index = IndexStore.Instance.GetIndex(indexName);
@@ -190,8 +198,10 @@ namespace Kentico.Xperience.Lucene.Services
                     // for now all changes are creates, update to be done later
                     // delete old document, there is no upsert nor update in Lucene
                     writer.DeleteDocuments(new Term(nameof(LuceneSearchModel.ObjectID), dataObject.ObjectID));
+
+                    var document = luceneSearchModelToDocumentMapper.MapModelToDocument(index, dataObject);
                     // add new one
-                    writer.AddDocument(dataObject.Document);
+                    writer.AddDocument(document);
                     count++;
                 }
                 return count;

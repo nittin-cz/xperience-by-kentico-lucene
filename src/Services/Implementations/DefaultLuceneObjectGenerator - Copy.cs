@@ -22,7 +22,7 @@ namespace Kentico.Xperience.Lucene.Services
     /// <summary>
     /// Default implementation of <see cref="ILuceneObjectGenerator"/>.
     /// </summary>
-    internal class DefaultLuceneObjectGenerator : ILuceneObjectGenerator
+    internal class DefaultLuceneObjectGeneratorBak //: ILuceneObjectGenerator
     {
         private readonly IConversionService conversionService;
         private readonly IEventLogService eventLogService;
@@ -38,7 +38,7 @@ namespace Kentico.Xperience.Lucene.Services
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultLuceneObjectGenerator"/> class.
         /// </summary>
-        public DefaultLuceneObjectGenerator(IConversionService conversionService,
+        public DefaultLuceneObjectGeneratorBak(IConversionService conversionService,
             IEventLogService eventLogService,
             IMediaFileInfoProvider mediaFileInfoProvider,
             IMediaFileUrlRetriever mediaFileUrlRetriever)
@@ -51,11 +51,11 @@ namespace Kentico.Xperience.Lucene.Services
 
 
         /// <inheritdoc/>
-        public async Task<LuceneSearchModel> GetTreeNodeData(LuceneQueueItem queueItem)
+        public async Task<LuceneDocument> GetTreeNodeData(LuceneQueueItem queueItem)
         {
-            var luceneIndex = IndexStore.Instance.GetIndex(queueItem.IndexName);
-
-            var data =  Activator.CreateInstance(luceneIndex.LuceneSearchModelType) as LuceneSearchModel;
+            var data = new LuceneDocument() {
+                Document = new Document(),
+            };
             await MapChangedProperties(queueItem, data);
             MapCommonProperties(queueItem.Node, data);
 
@@ -202,7 +202,7 @@ namespace Kentico.Xperience.Lucene.Services
         /// is <see cref="LuceneTaskType.UPDATE"/>, only the <see cref="LuceneQueueItem.ChangedColumns"/>
         /// will be added to the <paramref name="data"/>.
         /// </summary>
-        private async Task MapChangedProperties(LuceneQueueItem queueItem, LuceneSearchModel data)
+        private async Task MapChangedProperties(LuceneQueueItem queueItem, LuceneDocument data)
         {
             var columnsToUpdate = new List<string>();
             var indexedColumns = GetIndexedColumnNames(queueItem.IndexName);
@@ -225,32 +225,40 @@ namespace Kentico.Xperience.Lucene.Services
                     continue;
                 }
 
+                // TODO: consider inheriting field type from prop type
+                // assign field type
                 if (Attribute.IsDefined(prop, typeof(TextFieldAttribute)))
                 {
-                    prop.SetValue(data, nodeValue.ToString());
+                    var textFieldAttribute = prop.GetCustomAttributes<TextFieldAttribute>(false).FirstOrDefault();
+                    data.Document.Add(new TextField(prop.Name, nodeValue.ToString(), textFieldAttribute.Store ? Field.Store.YES : Field.Store.NO));
                 }
-                else if (Attribute.IsDefined(prop, typeof(StringFieldAttribute)))
+                if (Attribute.IsDefined(prop, typeof(StringFieldAttribute)))
                 {
-                    prop.SetValue(data, nodeValue.ToString());
+                    var stringFieldAttribute = prop.GetCustomAttributes<StringFieldAttribute>(false).FirstOrDefault();
+                    data.Document.Add(new StringField(prop.Name, nodeValue.ToString(), stringFieldAttribute.Store ? Field.Store.YES : Field.Store.NO));
                 }
                 else if (Attribute.IsDefined(prop, typeof(Int32FieldAttribute)))
                 {
-                    prop.SetValue(data, (int)nodeValue);
+                    var intFieldAttribute = prop.GetCustomAttributes<Int32FieldAttribute>(false).FirstOrDefault();
+                    data.Document.Add(new Int32Field(prop.Name, (int)nodeValue, intFieldAttribute.Store ? Field.Store.YES : Field.Store.NO));
                 }
                 else if (Attribute.IsDefined(prop, typeof(Int64FieldAttribute)))
                 {
-                    prop.SetValue(data, (long)nodeValue);
+                    var intFieldAttribute = prop.GetCustomAttributes<Int64FieldAttribute>(false).FirstOrDefault();
+                    data.Document.Add(new Int64Field(prop.Name, (long)nodeValue, intFieldAttribute.Store ? Field.Store.YES : Field.Store.NO));
                 }
                 else if (Attribute.IsDefined(prop, typeof(SingleFieldAttribute)))
                 {
-                    prop.SetValue(data, (float)nodeValue);
+                    var intFieldAttribute = prop.GetCustomAttributes<SingleFieldAttribute>(false).FirstOrDefault();
+                    data.Document.Add(new SingleField(prop.Name, (float)nodeValue, intFieldAttribute.Store ? Field.Store.YES : Field.Store.NO));
                 }
                 else if (Attribute.IsDefined(prop, typeof(DoubleFieldAttribute)))
                 {
-                    prop.SetValue(data, (double)nodeValue);
+                    var intFieldAttribute = prop.GetCustomAttributes<DoubleFieldAttribute>(false).FirstOrDefault();
+                    data.Document.Add(new DoubleField(prop.Name, (double)nodeValue, intFieldAttribute.Store ? Field.Store.YES : Field.Store.NO));
                 }
                 else
-                {
+                { 
                     // TODO: log some warning or implement default to text field
                 }
             }
@@ -262,11 +270,12 @@ namespace Kentico.Xperience.Lucene.Services
         /// located within the <see cref="LuceneSearchModel"/> class.
         /// </summary>
         /// <param name="node">The <see cref="TreeNode"/> to load values from.</param>
-        /// <param name="data">The data object based on <see cref="LuceneSearchModel"/>.</param>
-        private static void MapCommonProperties(TreeNode node, LuceneSearchModel data)
+        /// <param name="data">The dynamic data that will be passed to Lucene.</param>
+        private static void MapCommonProperties(TreeNode node, LuceneDocument data)
         {
             data.ObjectID = node.DocumentID.ToString();
-            data.ClassName = node.ClassName;
+            data.Document.Add(new StringField(nameof(LuceneSearchModel.ObjectID), data.ObjectID, Field.Store.YES));
+            data.Document.Add(new StringField(nameof(LuceneSearchModel.ClassName), node.ClassName, Field.Store.YES));
 
             string url;
             try
@@ -281,7 +290,7 @@ namespace Kentico.Xperience.Lucene.Services
                 url = String.Empty;
             }
 
-            data.Url = url;
+            data.Document.Add(new StringField(nameof(LuceneSearchModel.Url), url, Field.Store.YES));
         }
     }
 }

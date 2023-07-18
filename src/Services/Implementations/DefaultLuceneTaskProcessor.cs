@@ -56,11 +56,11 @@ namespace Kentico.Xperience.Lucene.Services
                     deleteIds.AddRange(GetIdsToDelete(luceneIndex, deleteTasks));
 
                     var updateTasks = group.Where(queueItem => queueItem.TaskType == LuceneTaskType.UPDATE || queueItem.TaskType == LuceneTaskType.CREATE);
-                    var upsertData = new List<LuceneDocument>();
+                    var upsertData = new List<LuceneSearchModel>();
                     foreach (var queueItem in updateTasks)
                     {
-                        var data = GetDataToUpsert(queueItem);
-                        upsertData.AddRange(data);
+                        var data = await luceneObjectGenerator.GetTreeNodeData(queueItem);
+                        upsertData.Add(data);
                     }
 
                     successfulOperations += await luceneClient.DeleteRecords(deleteIds, group.Key, cancellationToken);
@@ -73,11 +73,6 @@ namespace Kentico.Xperience.Lucene.Services
             }
 
             return successfulOperations;
-        }
-
-        private IEnumerable<LuceneDocument> GetDataToUpsert(LuceneQueueItem queueItem)
-        {
-            return new LuceneDocument[] { luceneObjectGenerator.GetTreeNodeData(queueItem) };
         }
 
         private IEnumerable<string> GetIdsToDelete(LuceneIndex luceneIndex, IEnumerable<LuceneQueueItem> deleteTasks)

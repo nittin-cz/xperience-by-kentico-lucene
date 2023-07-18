@@ -111,7 +111,7 @@ namespace Kentico.Xperience.Lucene
 
         private static void AddIncludedPaths(LuceneIndex index)
         {
-            var paths = index.Type.GetCustomAttributes<IncludedPathAttribute>(false);
+            var paths = index.LuceneSearchModelType.GetCustomAttributes<IncludedPathAttribute>(false);
             foreach (var path in paths)
             {
                 path.Identifier = Guid.NewGuid().ToString();

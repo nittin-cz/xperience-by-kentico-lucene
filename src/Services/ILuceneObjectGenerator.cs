@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Threading.Tasks;
 using CMS.DocumentEngine;
 
 using Kentico.Xperience.Lucene.Models;
@@ -22,7 +22,7 @@ namespace Kentico.Xperience.Lucene.Services
         /// <param name="queueItem">The queue item to process.</param>
         /// <returns>The anonymous data that will be passed to Lucene.</returns>
         /// <exception cref="ArgumentNullException" />
-        LuceneDocument GetTreeNodeData(LuceneQueueItem queueItem);
+        Task<LuceneSearchModel> GetTreeNodeData(LuceneQueueItem queueItem);
 
     }
 }
