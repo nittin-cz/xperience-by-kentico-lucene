@@ -2,7 +2,6 @@
 
 using Kentico.Xperience.Lucene.Attributes;
 using Lucene.Net.Documents;
-using System.Threading.Tasks;
 
 namespace Kentico.Xperience.Lucene.Models
 {
@@ -16,7 +15,7 @@ namespace Kentico.Xperience.Lucene.Models
         /// The internal Lucene ID of this search record.
         /// </summary>
         [StringField(true)]
-        public string ObjectID
+        public string? ObjectID
         {
             get;
             set;
@@ -27,7 +26,7 @@ namespace Kentico.Xperience.Lucene.Models
         /// The name of the Xperience class to which the indexed data belongs.
         /// </summary>
         [StringField(true)]
-        public string ClassName
+        public string? ClassName
         {
             get;
             set;
@@ -38,7 +37,7 @@ namespace Kentico.Xperience.Lucene.Models
         /// The absolute live site URL of the indexed page.
         /// </summary>
         [StringField(true)]
-        public string Url
+        public string? Url
         {
             get;
             set;
@@ -58,9 +57,7 @@ namespace Kentico.Xperience.Lucene.Models
         /// or null if no value was found.</param>
         /// <returns>The value that will be indexed in Lucene.</returns>
         public virtual Task<object> OnIndexingProperty(TreeNode node, string propertyName, string usedColumn, object foundValue)
-        {
-            return Task.FromResult(foundValue);
-        }
+        => Task.FromResult(foundValue);
 
         /// <summary>
         /// Called when indexing a search model. Enables overriding of multiple fields with custom data.
@@ -69,8 +66,6 @@ namespace Kentico.Xperience.Lucene.Models
         /// <param name="document">The resulting Lucene document to be modified. The document could be changed during the process</param>
         /// <returns>Modified Lucene document.</returns>
         public virtual Task<Document> OnIndexingDocument(TreeNode node, Document document)
-        {
-            return Task.FromResult(document);
-        }
+        => Task.FromResult(document);
     }
 }

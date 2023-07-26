@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-
-using CMS.Base;
+﻿using CMS.Base;
 using CMS.Core;
 
 using Kentico.Xperience.Lucene.Models;
@@ -28,10 +24,7 @@ namespace Kentico.Xperience.Lucene
         /// Should not be called directly- the worker should be initialized during startup using
         /// <see cref="ThreadWorker{T}.EnsureRunningThread"/>.
         /// </summary>
-        public LuceneQueueWorker()
-        {
-            luceneTaskProcessor = Service.Resolve<ILuceneTaskProcessor>();
-        }
+        public LuceneQueueWorker() => luceneTaskProcessor = Service.Resolve<ILuceneTaskProcessor>() ?? throw new Exception($"{nameof(ILuceneTaskProcessor)} is not registered.");
 
 
         /// <summary>
@@ -41,7 +34,7 @@ namespace Kentico.Xperience.Lucene
         /// <exception cref="InvalidOperationException" />
         public static void EnqueueLuceneQueueItem(LuceneQueueItem queueItem)
         {
-            if (queueItem == null || queueItem.Node == null || String.IsNullOrEmpty(queueItem.IndexName))
+            if (queueItem == null || queueItem.Node == null || string.IsNullOrEmpty(queueItem.IndexName))
             {
                 return;
             }
@@ -61,10 +54,7 @@ namespace Kentico.Xperience.Lucene
 
 
         /// <inheritdoc />
-        protected override void Finish()
-        {
-            RunProcess();
-        }
+        protected override void Finish() => RunProcess();
 
 
         /// <inheritdoc/>
@@ -74,9 +64,8 @@ namespace Kentico.Xperience.Lucene
 
 
         /// <inheritdoc />
-        protected override int ProcessItems(IEnumerable<LuceneQueueItem> items)
-        {
-            return luceneTaskProcessor.ProcessLuceneTasks(items, CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
+        protected override int ProcessItems(IEnumerable<LuceneQueueItem> items) =>
+             luceneTaskProcessor.ProcessLuceneTasks(items, CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
+
     }
 }

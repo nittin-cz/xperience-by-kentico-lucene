@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Kentico.Xperience.Lucene.Attributes
+﻿namespace Kentico.Xperience.Lucene.Attributes
 {
     /// <summary>
     /// A class attribute applied to an Lucene search model indicating that the specified path, content
@@ -23,7 +21,7 @@ namespace Kentico.Xperience.Lucene.Attributes
         /// A list of content types under the specified <see cref="AliasPath"/> that will be indexed.
         /// If empty, all content types are indexed.
         /// </summary>
-        public string[] ContentTypes
+        public string[]? ContentTypes
         {
             get;
             set;
@@ -33,7 +31,7 @@ namespace Kentico.Xperience.Lucene.Attributes
         /// <summary>
         /// The internal identifier of the included path.
         /// </summary>
-        internal string Identifier
+        internal string? Identifier
         {
             get;
             set;
@@ -45,9 +43,6 @@ namespace Kentico.Xperience.Lucene.Attributes
         /// </summary>
         /// <param name="aliasPath">The node alias pattern that will be used to match pages in the content tree
         /// for indexing.</param>
-        public IncludedPathAttribute(string aliasPath)
-        {
-            AliasPath = aliasPath;
-        }
+        public IncludedPathAttribute(string aliasPath) => AliasPath = aliasPath;
     }
 }

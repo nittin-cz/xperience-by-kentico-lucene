@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-using Kentico.Xperience.Admin.Base;
+﻿using Kentico.Xperience.Admin.Base;
 
 namespace Kentico.Xperience.Lucene.Admin
 {
@@ -12,7 +10,7 @@ namespace Kentico.Xperience.Lucene.Admin
         /// <summary>
         /// The alias path being displayed.
         /// </summary>
-        public string AliasPath
+        public string? AliasPath
         {
             get;
             set;
@@ -22,7 +20,7 @@ namespace Kentico.Xperience.Lucene.Admin
         /// <summary>
         /// The columns to display in the content type table.
         /// </summary>
-        public IEnumerable<Column> Columns
+        public IEnumerable<Column>? Columns
         {
             get;
             set;

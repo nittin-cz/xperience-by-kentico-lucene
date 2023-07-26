@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-using Kentico.Xperience.Admin.Base;
+﻿using Kentico.Xperience.Admin.Base;
 
 namespace Kentico.Xperience.Lucene.Admin
 {
@@ -12,7 +10,7 @@ namespace Kentico.Xperience.Lucene.Admin
         /// <summary>
         /// Columns to display in the indexed path table.
         /// </summary>
-        public IEnumerable<Column> PathColumns
+        public IEnumerable<Column>? PathColumns
         {
             get;
             set;
@@ -22,7 +20,8 @@ namespace Kentico.Xperience.Lucene.Admin
         /// <summary>
         /// Rows to display in the indexed path table.
         /// </summary>
-        public IEnumerable<Row> PathRows {
+        public IEnumerable<Row>? PathRows
+        {
             get;
             set;
         }
@@ -31,7 +30,7 @@ namespace Kentico.Xperience.Lucene.Admin
         /// <summary>
         /// Columns to display in the indexed properties table.
         /// </summary>
-        public IEnumerable<Column> PropertyColumns
+        public IEnumerable<Column>? PropertyColumns
         {
             get;
             set;
@@ -41,7 +40,7 @@ namespace Kentico.Xperience.Lucene.Admin
         /// <summary>
         /// Rows to display in the indexed properties table.
         /// </summary>
-        public IEnumerable<Row> PropertyRows
+        public IEnumerable<Row>? PropertyRows
         {
             get;
             set;

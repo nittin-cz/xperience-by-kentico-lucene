@@ -1,5 +1,4 @@
 ﻿using AngleSharp.Dom;
-using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using CMS.Helpers;
 
@@ -7,10 +6,14 @@ namespace Kentico.Xperience.Lucene.Examples.Utils
 {
     public class HtmlSanitizer
     {
-        public string SanitizeHtmlFragment(string htmlContent) {
+        public string SanitizeHtmlFragment(string htmlContent)
+        {
 
             var parser = new HtmlParser();
-            INodeList nodes = parser.ParseFragment(htmlContent, null);
+#pragma warning disable CS8625 //  Cannot convert null literal to non-nullable reference type.
+            // null is relevant parameter
+            var nodes = parser.ParseFragment(htmlContent, null);
+#pragma warning restore CS8625 //  Cannot convert null literal to non-nullable reference type.
 
             // Removes script tags
             foreach (var element in nodes.QuerySelectorAll("script"))
@@ -43,35 +46,40 @@ namespace Kentico.Xperience.Lucene.Examples.Utils
         public virtual string SanitizeHtmlDocument(string htmlContent)
         {
             var parser = new HtmlParser();
-            IHtmlDocument doc = parser.ParseDocument(htmlContent);
-            IHtmlElement body = doc.Body;
-
-            // Removes script tags
-            foreach (var element in body.QuerySelectorAll("script"))
+            var doc = parser.ParseDocument(htmlContent);
+            var body = doc.Body;
+            if (body != null)
             {
-                element.Remove();
+
+                // Removes script tags
+                foreach (var element in body.QuerySelectorAll("script"))
+                {
+                    element.Remove();
+                }
+
+                // Removes script tags
+                foreach (var element in body.QuerySelectorAll("style"))
+                {
+                    element.Remove();
+                }
+
+                // Removes elements marked with the default Xperience exclusion attribute
+                foreach (var element in body.QuerySelectorAll($"*[{"data-ktc-search-exclude"}]"))
+                {
+                    element.Remove();
+                }
+
+                // Gets the text content of the body element
+                string textContent = body.TextContent;
+
+                // Normalizes and trims whitespace characters
+                textContent = HTMLHelper.RegexHtmlToTextWhiteSpace.Replace(textContent, " ");
+                textContent = textContent.Trim();
+
+                return textContent;
             }
 
-            // Removes script tags
-            foreach (var element in body.QuerySelectorAll("style"))
-            {
-                element.Remove();
-            }
-
-            // Removes elements marked with the default Xperience exclusion attribute
-            foreach (var element in body.QuerySelectorAll($"*[{"data-ktc-search-exclude"}]"))
-            {
-                element.Remove();
-            }
-
-            // Gets the text content of the body element
-            string textContent = body.TextContent;
-
-            // Normalizes and trims whitespace characters
-            textContent = HTMLHelper.RegexHtmlToTextWhiteSpace.Replace(textContent, " ");
-            textContent = textContent.Trim();
-
-            return textContent;
+            return string.Empty;
         }
     }
 }

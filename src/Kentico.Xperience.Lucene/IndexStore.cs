@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-
-using Kentico.Xperience.Lucene.Attributes;
-using Kentico.Xperience.Lucene.Models;
+﻿using Kentico.Xperience.Lucene.Models;
 
 namespace Kentico.Xperience.Lucene
 {
@@ -42,9 +36,7 @@ namespace Kentico.Xperience.Lucene
                 throw new InvalidOperationException($"Attempted to register Lucene index with name '{index.IndexName},' but it is already registered.");
             }
 
-            // TODO: validate index attributes
-
-            AddIncludedPaths(index);
+            //AddIncludedPaths(index);
 
             index.Identifier = registeredIndexes.Count + 1;
             registeredIndexes.Add(index);
@@ -59,7 +51,7 @@ namespace Kentico.Xperience.Lucene
         /// <exception cref="InvalidOperationException" />
         public void AddCrawler(string crawlerId)
         {
-            if (String.IsNullOrEmpty(crawlerId))
+            if (string.IsNullOrEmpty(crawlerId))
             {
                 throw new ArgumentNullException(crawlerId);
             }
@@ -80,9 +72,9 @@ namespace Kentico.Xperience.Lucene
         /// <param name="indexName">The name of the index to retrieve.</param>
         /// <exception cref="ArgumentNullException" />
         /// <exception cref="InvalidOperationException" />
-        public LuceneIndex GetIndex(string indexName)
+        public LuceneIndex? GetIndex(string indexName)
         {
-            if (String.IsNullOrEmpty(indexName))
+            if (string.IsNullOrEmpty(indexName))
             {
                 throw new ArgumentNullException(nameof(indexName));
             }
@@ -94,48 +86,33 @@ namespace Kentico.Xperience.Lucene
         /// <summary>
         /// Gets all registered indexes.
         /// </summary>
-        public IEnumerable<LuceneIndex> GetAllIndexes()
-        {
-            return registeredIndexes;
-        }
+        public IEnumerable<LuceneIndex> GetAllIndexes() => registeredIndexes;
 
 
         /// <summary>
         /// Gets all registered crawlers.
         /// </summary>
-        public IEnumerable<string> GetAllCrawlers()
-        {
-            return registeredCrawlers;
-        }
+        public IEnumerable<string> GetAllCrawlers() => registeredCrawlers;
 
 
-        private static void AddIncludedPaths(LuceneIndex index)
-        {
-            var paths = index.LuceneSearchModelType.GetCustomAttributes<IncludedPathAttribute>(false);
-            foreach (var path in paths)
-            {
-                path.Identifier = Guid.NewGuid().ToString();
-            }
+        //private static void AddIncludedPaths(LuceneIndex index)
+        //{
+        //    var paths = index.LuceneSearchModelType.GetCustomAttributes<IncludedPathAttribute>(false);
+        //    foreach (var path in paths)
+        //    {
+        //        path.Identifier = Guid.NewGuid().ToString();
+        //    }
 
-            index.IncludedPaths = paths;
-        }
-        
-
-        internal void ClearCrawlers()
-        {
-            registeredCrawlers.Clear();
-        }
+        //    index.IncludedPaths = paths;
+        //}
 
 
-        internal void ClearIndexes()
-        {
-            registeredIndexes.Clear();
-        }
+        internal void ClearCrawlers() => registeredCrawlers.Clear();
 
 
-        internal LuceneIndex GetIndex(int id)
-        {
-            return registeredIndexes.FirstOrDefault(i => i.Identifier == id);
-        }
+        internal void ClearIndexes() => registeredIndexes.Clear();
+
+
+        internal LuceneIndex? GetIndex(int id) => registeredIndexes.FirstOrDefault(i => i.Identifier == id);
     }
 }

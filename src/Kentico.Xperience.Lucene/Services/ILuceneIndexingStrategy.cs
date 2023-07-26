@@ -1,7 +1,6 @@
 ﻿using CMS.DocumentEngine;
 using Kentico.Xperience.Lucene.Attributes;
 using Kentico.Xperience.Lucene.Models;
-using System.Threading.Tasks;
 
 namespace Kentico.Xperience.Lucene.Services
 {
@@ -19,7 +18,7 @@ namespace Kentico.Xperience.Lucene.Services
         /// <param name="foundValue">The value of the property that was found in the <paramref name="node"/>,
         /// or null if no value was found.</param>
         /// <returns>The value that will be indexed in Lucene.</returns>
-        Task<object> OnIndexingProperty(TreeNode node, string propertyName, string usedColumn, object foundValue);
+        Task<object?> OnIndexingProperty(TreeNode node, string propertyName, string usedColumn, object? foundValue);
 
         /// <summary>
         /// Called when indexing a search model. Enables overriding of multiple fields with custom data.

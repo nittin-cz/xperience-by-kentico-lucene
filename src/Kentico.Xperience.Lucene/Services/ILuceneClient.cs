@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
 using Kentico.Xperience.Lucene.Models;
 
 namespace Kentico.Xperience.Lucene.Services
@@ -17,13 +12,13 @@ namespace Kentico.Xperience.Lucene.Services
         /// </summary>
         /// <param name="objectIds">The Lucene internal IDs of the records to delete.</param>
         /// <param name="indexName">The index containing the objects to delete.</param>
-        /// <param name="cancellationToken">The cancellation token for the task.</param>
+        /// 
         /// <exception cref="ArgumentNullException" />
         /// <exception cref="OperationCanceledException" />
         /// <exception cref="ObjectDisposedException" />
         /// <exception cref="OverflowException" />
         /// <returns>The number of records deleted.</returns>
-        Task<int> DeleteRecords(IEnumerable<string> objectIds, string indexName, CancellationToken cancellationToken);
+        Task<int> DeleteRecords(IEnumerable<string> objectIds, string indexName);
 
         /// <summary>
         /// Gets the indices of the Lucene application with basic statistics.

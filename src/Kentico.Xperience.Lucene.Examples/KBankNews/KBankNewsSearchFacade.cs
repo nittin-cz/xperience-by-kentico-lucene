@@ -7,23 +7,20 @@ namespace Kentico.Xperience.Lucene.Examples.KBankNews
 {
     public class KBankNewsSearchFacade
     {
-        const int PHRASE_SLOP = 3;
-        const int MAX_RESULTS = 1000;
+        private const int PHRASE_SLOP = 3;
+        private const int MAX_RESULTS = 1000;
 
-        private readonly ILuceneIndexService _luceneIndexService;
+        private readonly ILuceneIndexService luceneIndexService;
 
-        public KBankNewsSearchFacade(ILuceneIndexService luceneIndexService)
+        public KBankNewsSearchFacade(ILuceneIndexService luceneIndexService) => this.luceneIndexService = luceneIndexService;
+        public LuceneSearchResultModel<KBankNewsSearchResultItemModel> Search(string searchText, int pageSize = 20, int page = 1)
         {
-            _luceneIndexService = luceneIndexService;
-        }
-        public LuceneSearchResultModel<KBankNewsSearchResultItemModel> Search(string searchText, int pageSize = 20, int page = 1) {
+            var index = IndexStore.Instance.GetIndex(KBankNewsSearchModel.IndexName) ?? throw new Exception($"Index {KBankNewsSearchModel.IndexName} was not found!!!");
             pageSize = Math.Max(1, pageSize);
             page = Math.Max(1, page);
-            var offset = pageSize * (page - 1);
-            var limit = pageSize;
-            
-            var index = IndexStore.Instance.GetIndex(KBankNewsSearchModel.IndexName);
-            var searchTextNormalized = NormalizeSearchText(searchText);
+            int offset = pageSize * (page - 1);
+            int limit = pageSize;
+
             var queryBuilder = new QueryBuilder(index.Analyzer);
 
             var titlePhrase = queryBuilder.CreatePhraseQuery(nameof(KBankNewsSearchModel.Title), searchText, PHRASE_SLOP);
@@ -45,14 +42,15 @@ namespace Kentico.Xperience.Lucene.Examples.KBankNews
                 { contentShould, Occur.SHOULD },
             };
 
-            var result = _luceneIndexService.UseSearcher(
+            var result = luceneIndexService.UseSearcher(
                 index,
                 (searcher) =>
                 {
                     var topDocs = searcher.Search(query, MAX_RESULTS);
 
 
-                    return new LuceneSearchResultModel<KBankNewsSearchResultItemModel>() {
+                    return new LuceneSearchResultModel<KBankNewsSearchResultItemModel>()
+                    {
                         Page = page,
                         PageSize = pageSize,
                         TotalPages = topDocs.TotalHits <= 0 ? 0 : (topDocs.TotalHits - 1) / pageSize + 1,
@@ -69,19 +67,12 @@ namespace Kentico.Xperience.Lucene.Examples.KBankNews
             return result;
         }
 
-        private KBankNewsSearchResultItemModel MapToResultItem(Document doc) {
-            return new KBankNewsSearchResultItemModel()
-            {
-                Title = doc.Get(nameof(KBankNewsSearchModel.Title)),
-                Summary = doc.Get(nameof(KBankNewsSearchModel.Summary)),
-                NewsType = doc.Get(nameof(KBankNewsSearchModel.NewsType)),
-                Url = doc.Get(nameof(KBankNewsSearchModel.Url)),
-            };
-        }
-
-        private string NormalizeSearchText(string searchText)
+        private KBankNewsSearchResultItemModel MapToResultItem(Document doc) => new()
         {
-            return searchText.ToLower();
-        }
+            Title = doc.Get(nameof(KBankNewsSearchModel.Title)),
+            Summary = doc.Get(nameof(KBankNewsSearchModel.Summary)),
+            NewsType = doc.Get(nameof(KBankNewsSearchModel.NewsType)),
+            Url = doc.Get(nameof(KBankNewsSearchModel.Url)),
+        };
     }
 }

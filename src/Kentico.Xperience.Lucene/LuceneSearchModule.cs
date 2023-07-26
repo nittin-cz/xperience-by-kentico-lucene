@@ -12,19 +12,13 @@ namespace Kentico.Xperience.Lucene
     /// </summary>
     internal class LuceneSearchModule : Module
     {
-        private ILuceneTaskLogger luceneTaskLogger;
-        private IAppSettingsService appSettingsService;
-        private IConversionService conversionService;
+        private ILuceneTaskLogger? luceneTaskLogger;
+        private IAppSettingsService? appSettingsService;
+        private IConversionService? conversionService;
         private const string APP_SETTINGS_KEY_INDEXING_DISABLED = "LuceneSearchDisableIndexing";
 
 
-        private bool IndexingDisabled
-        {
-            get
-            {
-                return conversionService.GetBoolean(appSettingsService[APP_SETTINGS_KEY_INDEXING_DISABLED], false);
-            }
-        }
+        private bool IndexingDisabled => conversionService?.GetBoolean(appSettingsService?[APP_SETTINGS_KEY_INDEXING_DISABLED], false) ?? false;
 
 
         /// <inheritdoc/>
@@ -53,28 +47,28 @@ namespace Kentico.Xperience.Lucene
         /// <summary>
         /// Called when a page is published or archived. Logs an Lucene task to be processed later.
         /// </summary>
-        private void HandleWorkflowEvent(object sender, WorkflowEventArgs e)
+        private void HandleWorkflowEvent(object? sender, WorkflowEventArgs e)
         {
             if (IndexingDisabled)
             {
                 return;
             }
 
-            luceneTaskLogger.HandleEvent(e.Document, e.CurrentHandler.Name);
+            luceneTaskLogger?.HandleEvent(e.Document, e.CurrentHandler.Name);
         }
 
 
         /// <summary>
         /// Called when a page is deleted. Logs an Lucene task to be processed later.
         /// </summary>
-        private void HandleDocumentEvent(object sender, DocumentEventArgs e)
+        private void HandleDocumentEvent(object? sender, DocumentEventArgs e)
         {
             if (IndexingDisabled)
             {
                 return;
             }
 
-            luceneTaskLogger.HandleEvent(e.Node, e.CurrentHandler.Name);
+            luceneTaskLogger?.HandleEvent(e.Node, e.CurrentHandler.Name);
         }
     }
 }

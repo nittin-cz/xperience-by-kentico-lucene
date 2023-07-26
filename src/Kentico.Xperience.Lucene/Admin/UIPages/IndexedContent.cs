@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 
 using CMS.DataEngine.Query;
 using CMS.DocumentEngine;
@@ -18,7 +15,7 @@ namespace Kentico.Xperience.Lucene.Admin
     internal class IndexedContent : Page<IndexedContentPageClientProperties>
     {
         private readonly IPageUrlGenerator pageUrlGenerator;
-        private LuceneIndex indexToDisplay;
+        private LuceneIndex? indexToDisplay;
 
 
         /// <summary>
@@ -35,10 +32,7 @@ namespace Kentico.Xperience.Lucene.Admin
         /// <summary>
         /// Initializes a new instance of the <see cref="IndexedContent"/> class.
         /// </summary>
-        public IndexedContent(IPageUrlGenerator pageUrlGenerator)
-        {
-            this.pageUrlGenerator = pageUrlGenerator;
-        }
+        public IndexedContent(IPageUrlGenerator pageUrlGenerator) => this.pageUrlGenerator = pageUrlGenerator;
 
 
         /// <summary>
@@ -46,20 +40,17 @@ namespace Kentico.Xperience.Lucene.Admin
         /// </summary>
         /// <param name="args">The arguments emitted by the template.</param>
         [PageCommand]
-        public Task<INavigateResponse> ShowPathDetail(PathDetailArguments args)
-        {
-            return Task.FromResult(NavigateTo(pageUrlGenerator.GenerateUrl(typeof(PathDetail), IndexIdentifier.ToString(), args.Identifier)));
-        }
+        public Task<INavigateResponse> ShowPathDetail(PathDetailArguments args) => Task.FromResult(NavigateTo(pageUrlGenerator.GenerateUrl(typeof(PathDetail), IndexIdentifier.ToString(), args.Identifier)));
 
 
         /// <inheritdoc/>
         public override Task<IndexedContentPageClientProperties> ConfigureTemplateProperties(IndexedContentPageClientProperties properties)
         {
-            properties.PathRows = indexToDisplay.IncludedPaths.Select(attr => GetPath(attr));
+            properties.PathRows = indexToDisplay?.IncludedPaths.Select(attr => GetPath(attr)) ?? new Row[0];
             properties.PathColumns = GetPathColumns();
 
-            var searchModelProperties = indexToDisplay.LuceneSearchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-            properties.PropertyRows = searchModelProperties.Select(prop => GetProperty(prop));
+            var searchModelProperties = indexToDisplay?.LuceneSearchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+            properties.PropertyRows = searchModelProperties?.Select(prop => GetProperty(prop)) ?? new Row[0];
             properties.PropertyColumns = GetPropertyColumns();
 
             return Task.FromResult(properties);
@@ -84,12 +75,10 @@ namespace Kentico.Xperience.Lucene.Admin
         }
 
 
-        private Row GetPath(IncludedPathAttribute attribute)
+        private Row GetPath(IncludedPathAttribute attribute) => new()
         {
-            return new Row
-            {
-                Identifier = attribute.Identifier,
-                Cells = new Cell[] {
+            Identifier = attribute.Identifier,
+            Cells = new Cell[] {
                     new StringCell
                     {
                         Value = attribute.AliasPath
@@ -105,13 +94,10 @@ namespace Kentico.Xperience.Lucene.Admin
                         }
                     }
                 }
-            };
-        }
+        };
 
 
-        private Column[] GetPathColumns()
-        {
-            return new Column[] {
+        private Column[] GetPathColumns() => new Column[] {
                 new Column
                 {
                     Caption = LocalizationService.GetString("integrations.lucene.content.columns.path"),
@@ -123,7 +109,6 @@ namespace Kentico.Xperience.Lucene.Admin
                     ContentType = ColumnContentType.Component
                 }
             };
-        }
 
 
         private static Row GetProperty(PropertyInfo property)
@@ -132,10 +117,10 @@ namespace Kentico.Xperience.Lucene.Admin
             //var isRetrievable = Attribute.IsDefined(property, typeof(RetrievableAttribute));
             //var isFacetable = Attribute.IsDefined(property, typeof(FacetableAttribute));
             // TODO: read from attributes
-            var isSearchable = false;
-            var isRetrievable = false;
-            var hasSources = Attribute.IsDefined(property, typeof(SourceAttribute));
-            var hasUrls = Attribute.IsDefined(property, typeof(MediaUrlsAttribute));
+            bool isSearchable = false;
+            bool isRetrievable = false;
+            bool hasSources = Attribute.IsDefined(property, typeof(SourceAttribute));
+            bool hasUrls = Attribute.IsDefined(property, typeof(MediaUrlsAttribute));
             return new Row
             {
                 Cells = new Cell[] {
@@ -193,9 +178,7 @@ namespace Kentico.Xperience.Lucene.Admin
         }
 
 
-        private Column[] GetPropertyColumns()
-        {
-            return new Column[] {
+        private Column[] GetPropertyColumns() => new Column[] {
                 new Column
                 {
                     Caption = LocalizationService.GetString("integrations.lucene.content.columns.property"),
@@ -227,24 +210,17 @@ namespace Kentico.Xperience.Lucene.Admin
                     ContentType = ColumnContentType.Component
                 }
             };
-        }
 
 
-        private static Color GetIconColor(bool status)
-        {
-            return status ? Color.SuccessIcon : Color.IconLowEmphasis;
-        }
+        private static Color GetIconColor(bool status) => status ? Color.SuccessIcon : Color.IconLowEmphasis;
 
 
-        private static string GetIconName(bool status)
-        {
-            return status ? Icons.Check : Icons.Minus;
-        }
+        private static string GetIconName(bool status) => status ? Icons.Check : Icons.Minus;
 
 
         private static Color GetContentTypeColor(IncludedPathAttribute attribute)
         {
-            if (!attribute.ContentTypes.Any())
+            if (attribute.ContentTypes == null || !attribute.ContentTypes.Any())
             {
                 return Color.BackgroundTagGrey;
             }
@@ -259,19 +235,19 @@ namespace Kentico.Xperience.Lucene.Admin
 
         private string GetContentTypeLabel(IncludedPathAttribute attribute)
         {
-            if (!attribute.ContentTypes.Any())
+            if (attribute.ContentTypes == null || !attribute.ContentTypes.Any())
             {
-                var allTypes = DocumentTypeHelper.GetDocumentTypeClasses()
+                int allTypes = DocumentTypeHelper.GetDocumentTypeClasses()
                     .OnSite(SiteService.CurrentSite?.SiteID)
                     .GetCount();
-                return String.Format(LocalizationService.GetString("integrations.lucene.content.alltypes"), allTypes);
+                return string.Format(LocalizationService.GetString("integrations.lucene.content.alltypes"), allTypes);
             }
             else if (attribute.ContentTypes.Length == 1)
             {
                 return LocalizationService.GetString("integrations.lucene.content.singletype");
             }
 
-            return String.Format(LocalizationService.GetString("integrations.lucene.content.multipletypes"), attribute.ContentTypes.Length);
+            return string.Format(LocalizationService.GetString("integrations.lucene.content.multipletypes"), attribute.ContentTypes.Length);
         }
 
 
@@ -284,7 +260,7 @@ namespace Kentico.Xperience.Lucene.Admin
             /// The identifier of the row clicked, which corresponds with the internal
             /// <see cref="IncludedPathAttribute.Identifier"/>.
             /// </summary>
-            public string Identifier { get; set; }
+            public string? Identifier { get; set; }
         }
     }
 }

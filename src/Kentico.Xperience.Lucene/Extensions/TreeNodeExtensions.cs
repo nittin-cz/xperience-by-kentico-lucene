@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using CMS.Core;
+﻿using CMS.Core;
 using CMS.DocumentEngine;
 
 using Kentico.Xperience.Lucene.Attributes;
@@ -39,7 +36,7 @@ namespace Kentico.Xperience.Lucene.Extensions
         /// <exception cref="ArgumentNullException" />
         public static bool IsIndexedByIndex(this TreeNode node, string indexName)
         {
-            if (String.IsNullOrEmpty(indexName))
+            if (string.IsNullOrEmpty(indexName))
             {
                 throw new ArgumentNullException(nameof(indexName));
             }
@@ -55,15 +52,17 @@ namespace Kentico.Xperience.Lucene.Extensions
                 return false;
             }
 
-            if (!luceneIndex.LuceneIndexingStrategy.ShouldIndexNode(node)) { 
+            if (!luceneIndex.LuceneIndexingStrategy.ShouldIndexNode(node))
+            {
                 return false;
             }
 
-            return luceneIndex.IncludedPaths.Any(includedPathAttribute => {
-                var matchesContentType = includedPathAttribute.ContentTypes.Length == 0 || includedPathAttribute.ContentTypes.Contains(node.ClassName);
+            return luceneIndex.IncludedPaths.Any(includedPathAttribute =>
+            {
+                bool matchesContentType = includedPathAttribute.ContentTypes == null || includedPathAttribute.ContentTypes.Length == 0 || includedPathAttribute.ContentTypes.Contains(node.ClassName);
                 if (includedPathAttribute.AliasPath.EndsWith("/%"))
                 {
-                    var pathToMatch = TreePathUtils.EnsureSingleNodePath(includedPathAttribute.AliasPath);
+                    string? pathToMatch = TreePathUtils.EnsureSingleNodePath(includedPathAttribute.AliasPath);
                     var pathsOnPath = TreePathUtils.GetNodeAliasPathsOnPath(node.NodeAliasPath, true, false).ToHashSet();
 
                     return pathsOnPath.Contains(pathToMatch) && matchesContentType;

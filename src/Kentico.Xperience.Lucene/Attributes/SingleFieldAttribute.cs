@@ -8,7 +8,7 @@ namespace Kentico.Xperience.Lucene.Attributes
     /// for efficient range filtering and sorting.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public sealed class SingleFieldAttribute : FieldAttributeBase
+    public sealed class SingleFieldAttribute : BaseFieldAttribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="SingleFieldAttribute"/> class.

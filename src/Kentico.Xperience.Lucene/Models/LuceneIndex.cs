@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Reflection;
 using Kentico.Xperience.Lucene.Attributes;
 using Kentico.Xperience.Lucene.Services;
 using Kentico.Xperience.Lucene.Services.Implementations;
@@ -82,9 +80,9 @@ namespace Kentico.Xperience.Lucene.Models
         /// <param name="luceneIndexingStrategy">Defaults to  <see cref="DefaultLuceneIndexingStrategy"/></param>
         /// <exception cref="ArgumentNullException" />
         /// <exception cref="InvalidOperationException" />
-        public LuceneIndex(Type type, Analyzer analyzer, string indexName, string indexPath = null, ILuceneIndexingStrategy luceneIndexingStrategy = null)
+        public LuceneIndex(Type type, Analyzer analyzer, string indexName, string? indexPath = null, ILuceneIndexingStrategy? luceneIndexingStrategy = null)
         {
-            if (String.IsNullOrEmpty(indexName))
+            if (string.IsNullOrEmpty(indexName))
             {
                 throw new ArgumentNullException(nameof(indexName));
             }
@@ -94,21 +92,24 @@ namespace Kentico.Xperience.Lucene.Models
                 throw new ArgumentNullException(nameof(type));
             }
 
-            if (analyzer == null)
-            {
-                throw new ArgumentNullException(nameof(analyzer));
-            }
-
             if (!typeof(LuceneSearchModel).IsAssignableFrom(type))
             {
                 throw new InvalidOperationException($"The search model {type} must extend {nameof(LuceneSearchModel)}.");
             }
 
-            Analyzer = analyzer;
+            Analyzer = analyzer ?? throw new ArgumentNullException(nameof(analyzer));
             LuceneSearchModelType = type;
             IndexName = indexName;
             IndexPath = indexPath ?? Path.Combine(Environment.CurrentDirectory, "App_Data", "LuceneSearch", indexName);
             LuceneIndexingStrategy = luceneIndexingStrategy ?? new DefaultLuceneIndexingStrategy();
+
+            var paths = type.GetCustomAttributes<IncludedPathAttribute>(false);
+            foreach (var path in paths)
+            {
+                path.Identifier = Guid.NewGuid().ToString();
+            }
+
+            IncludedPaths = paths;
         }
     }
 }

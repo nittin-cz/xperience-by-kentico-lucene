@@ -8,7 +8,7 @@ namespace Kentico.Xperience.Lucene.Attributes
     /// for efficient range filtering and sorting.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public sealed class Int32FieldAttribute : FieldAttributeBase
+    public sealed class Int32FieldAttribute : BaseFieldAttribute
     {
 
         /// <summary>

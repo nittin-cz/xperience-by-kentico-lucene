@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-
 using CMS.Core;
 using CMS.DocumentEngine;
 using CMS.Helpers;
@@ -31,7 +24,6 @@ namespace Kentico.Xperience.Lucene.Services
         private readonly IEventLogService eventLogService;
         private readonly IPageRetriever pageRetriever;
         private readonly IProgressiveCache progressiveCache;
-        private const string CACHEKEY_CRAWLER = "Lucene|Crawler|{0}";
 
         internal const string CACHEKEY_STATISTICS = "Lucene|ListIndices";
 
@@ -52,20 +44,12 @@ namespace Kentico.Xperience.Lucene.Services
             this.progressiveCache = progressiveCache;
             this.luceneIndexService = luceneIndexService;
             this.luceneSearchModelToDocumentMapper = luceneSearchModelToDocumentMapper;
-
-            //// Initialize HttpClient used for crawler requests if a crawler is registered
-            //if (IndexStore.Instance.GetAllCrawlers().Any())
-            //{
-            //    httpClient.BaseAddress = new Uri(BASE_URL);
-            //    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            //    httpClient.DefaultRequestHeaders.Add("Authorization", $"Basic {GetBasicAuthentication()}");
-            //}
         }
 
         /// <inheritdoc />
-        public Task<int> DeleteRecords(IEnumerable<string> objectIds, string indexName, CancellationToken cancellationToken)
+        public Task<int> DeleteRecords(IEnumerable<string> objectIds, string indexName)
         {
-            if (String.IsNullOrEmpty(indexName))
+            if (string.IsNullOrEmpty(indexName))
             {
                 throw new ArgumentNullException(nameof(indexName));
             }
@@ -75,51 +59,41 @@ namespace Kentico.Xperience.Lucene.Services
                 return Task.FromResult(0);
             }
 
-            return DeleteRecordsInternal(objectIds, indexName, cancellationToken);
+            return DeleteRecordsInternal(objectIds, indexName);
         }
 
 
         /// <inheritdoc/>
-        public async Task<ICollection<LuceneIndexStatisticsViewModel>> GetStatistics(CancellationToken cancellationToken)
-        {
-            return IndexStore.Instance.GetAllIndexes().Select(i => {
-                var statistics = luceneIndexService.UseSearcher(i, s => new LuceneIndexStatisticsViewModel()
-                {
-                    Name = i.IndexName,
-                    Entries = s.IndexReader.NumDocs,
-                });
-                return statistics;
-            }).ToList();
-            //return new List<LuceneIndexStatisticsViewModel>();
-            //return await progressiveCache.LoadAsync(async (cs, ct) => {
-            //    var response = await searchClient.ListIndicesAsync(ct: ct).ConfigureAwait(false);
-            //    return response.Items;
-            //}, new CacheSettings(20, CACHEKEY_STATISTICS), cancellationToken).ConfigureAwait(false);
-        }
+        public async Task<ICollection<LuceneIndexStatisticsViewModel>> GetStatistics(CancellationToken cancellationToken) => IndexStore.Instance.GetAllIndexes().Select(i =>
+                                                                                                                                      {
+                                                                                                                                          var statistics = luceneIndexService.UseSearcher(i, s => new LuceneIndexStatisticsViewModel()
+                                                                                                                                          {
+                                                                                                                                              Name = i.IndexName,
+                                                                                                                                              Entries = s.IndexReader.NumDocs,
+                                                                                                                                          });
+                                                                                                                                          return statistics;
+                                                                                                                                      }).ToList();
 
 
         /// <inheritdoc />
         public Task Rebuild(string indexName, CancellationToken cancellationToken)
         {
-            if (String.IsNullOrEmpty(indexName))
+            if (string.IsNullOrEmpty(indexName))
             {
                 throw new ArgumentNullException(nameof(indexName));
             }
 
             var luceneIndex = IndexStore.Instance.GetIndex(indexName);
-            if (luceneIndex == null)
-            {
-                throw new InvalidOperationException($"The index '{indexName}' is not registered.");
-            }
-
-            return RebuildInternal(luceneIndex, cancellationToken);
+            return luceneIndex == null
+                ? throw new InvalidOperationException($"The index '{indexName}' is not registered.")
+                : RebuildInternal(luceneIndex, cancellationToken);
         }
 
 
         /// <inheritdoc />
         public Task<int> UpsertRecords(IEnumerable<LuceneSearchModel> dataObjects, string indexName, CancellationToken cancellationToken)
         {
-            if (String.IsNullOrEmpty(indexName))
+            if (string.IsNullOrEmpty(indexName))
             {
                 throw new ArgumentNullException(nameof(indexName));
             }
@@ -129,26 +103,28 @@ namespace Kentico.Xperience.Lucene.Services
                 return Task.FromResult(0);
             }
 
-            return UpsertRecordsInternal(dataObjects, indexName, cancellationToken);
+            return UpsertRecordsInternal(dataObjects, indexName);
         }
 
-        private async Task<int> DeleteRecordsInternal(IEnumerable<string> objectIds, string indexName, CancellationToken cancellationToken)
+        private async Task<int> DeleteRecordsInternal(IEnumerable<string> objectIds, string indexName)
         {
-            //var searchIndex = await luceneIndexService.InitializeIndex(indexName, cancellationToken);
             var index = IndexStore.Instance.GetIndex(indexName);
-            luceneIndexService.UseWriter(index, (writer) =>
+            if (index != null)
             {
-                BooleanQuery booleanQuery = new BooleanQuery();
-                foreach (string objectId in objectIds)
+                luceneIndexService.UseWriter(index, (writer) =>
                 {
-                    TermQuery termQuery = new TermQuery(new Term(nameof(LuceneSearchModel.ObjectID), objectId));
-                    booleanQuery.Add(termQuery, Occur.SHOULD); // Match any of the object IDs
-                }
-                // todo use batches
-                writer.DeleteDocuments(booleanQuery);
-                return "OK";
-            });
+                    var booleanQuery = new BooleanQuery();
+                    foreach (string objectId in objectIds)
+                    {
+                        var termQuery = new TermQuery(new Term(nameof(LuceneSearchModel.ObjectID), objectId));
+                        booleanQuery.Add(termQuery, Occur.SHOULD); // Match any of the object IDs
+                    }
+                    // todo use batches
+                    writer.DeleteDocuments(booleanQuery);
+                    return "OK";
+                });
 
+            }
             return 0;
         }
 
@@ -157,13 +133,13 @@ namespace Kentico.Xperience.Lucene.Services
         {
             // Clear statistics cache so listing displays updated data after rebuild
             cacheAccessor.Remove(CACHEKEY_STATISTICS);
-            
+
             var indexedNodes = new List<TreeNode>();
             foreach (var includedPathAttribute in luceneIndex.IncludedPaths)
             {
                 var nodes = (await pageRetriever.RetrieveMultipleAsync(q =>
                 {
-                    if (includedPathAttribute.ContentTypes.Length > 0)
+                    if (includedPathAttribute.ContentTypes != null && includedPathAttribute.ContentTypes.Length > 0)
                     {
                         q.Types(includedPathAttribute.ContentTypes);
                     }
@@ -179,33 +155,33 @@ namespace Kentico.Xperience.Lucene.Services
                 indexedNodes.AddRange(nodes);
             }
 
-            // TODO: clear Lucene index using DeleteAll
-
-            //var searchIndex = await luceneIndexService.InitializeIndex(luceneIndex.IndexName, cancellationToken);
-            //await searchIndex.ClearObjectsAsync(ct: cancellationToken);
 
             indexedNodes.ForEach(node => LuceneQueueWorker.EnqueueLuceneQueueItem(new LuceneQueueItem(node, LuceneTaskType.CREATE, luceneIndex.IndexName)));
         }
 
-        private async Task<int> UpsertRecordsInternal(IEnumerable<LuceneSearchModel> dataObjects, string indexName, CancellationToken cancellationToken)
+        private async Task<int> UpsertRecordsInternal(IEnumerable<LuceneSearchModel> dataObjects, string indexName)
         {
-            //var searchIndex = await luceneIndexService.InitializeIndex(indexName, cancellationToken);
             var index = IndexStore.Instance.GetIndex(indexName);
-            return luceneIndexService.UseWriter(index, (writer) =>
+            if (index != null)
             {
-                var count = 0;
-                foreach (var dataObject in dataObjects) {
-                    // for now all changes are creates, update to be done later
-                    // delete old document, there is no upsert nor update in Lucene
-                    writer.DeleteDocuments(new Term(nameof(LuceneSearchModel.ObjectID), dataObject.ObjectID));
+                return luceneIndexService.UseWriter(index, (writer) =>
+                {
+                    int count = 0;
+                    foreach (var dataObject in dataObjects)
+                    {
+                        // for now all changes are creates, update to be done later
+                        // delete old document, there is no upsert nor update in Lucene
+                        writer.DeleteDocuments(new Term(nameof(LuceneSearchModel.ObjectID), dataObject.ObjectID));
 
-                    var document = luceneSearchModelToDocumentMapper.MapModelToDocument(index, dataObject);
-                    // add new one
-                    writer.AddDocument(document);
-                    count++;
-                }
-                return count;
-            });
+                        var document = luceneSearchModelToDocumentMapper.MapModelToDocument(index, dataObject);
+                        // add new one
+                        writer.AddDocument(document);
+                        count++;
+                    }
+                    return count;
+                });
+            }
+            return 0;
         }
     }
 }

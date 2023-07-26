@@ -1,12 +1,10 @@
-﻿using System;
-
-namespace Kentico.Xperience.Lucene.Attributes
+﻿namespace Kentico.Xperience.Lucene.Attributes
 {
     /// <summary>
     /// A property attribute which specifies the LuceneIndex field type. 
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public abstract class FieldAttributeBase : Attribute
+    public abstract class BaseFieldAttribute : Attribute
     {
         /// <summary>
         /// Store the original field value in the index. this is useful for short texts

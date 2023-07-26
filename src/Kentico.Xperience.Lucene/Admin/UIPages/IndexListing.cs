@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-using CMS.Core;
+﻿using CMS.Core;
 
 using Kentico.Xperience.Admin.Base;
 using Kentico.Xperience.Lucene.Models;
@@ -21,7 +15,7 @@ namespace Kentico.Xperience.Lucene.Admin
     {
         private readonly ILuceneClient luceneClient;
         private readonly IPageUrlGenerator pageUrlGenerator;
-        private ListingConfiguration mPageConfiguration;
+        private ListingConfiguration? mPageConfiguration;
 
 
         /// <inheritdoc/>
@@ -29,25 +23,19 @@ namespace Kentico.Xperience.Lucene.Admin
         {
             get
             {
-                if (mPageConfiguration == null)
+                mPageConfiguration ??= new ListingConfiguration()
                 {
-                    mPageConfiguration = new ListingConfiguration()
-                    {
-                        Caption = LocalizationService.GetString("integrations.lucene.listing.caption"),
-                        ColumnConfigurations = new List<ColumnConfiguration>(),
-                        TableActions = new List<ActionConfiguration>(),
-                        HeaderActions = new List<ActionConfiguration>(),
-                        PageSizes = new List<int> { 10, 25 }
-                    };
-                }
+                    Caption = LocalizationService.GetString("integrations.lucene.listing.caption"),
+                    ColumnConfigurations = new List<ColumnConfiguration>(),
+                    TableActions = new List<ActionConfiguration>(),
+                    HeaderActions = new List<ActionConfiguration>(),
+                    PageSizes = new List<int> { 10, 25 }
+                };
 
                 return mPageConfiguration;
-                
+
             }
-            set
-            {
-                mPageConfiguration = value;
-            }
+            set => mPageConfiguration = value;
         }
 
 
@@ -98,9 +86,7 @@ namespace Kentico.Xperience.Lucene.Admin
         /// <see cref="LuceneIndex.Identifier"/> to display.</param>
         [PageCommand]
         public Task<INavigateResponse> RowClick(int id)
-        {
-            return Task.FromResult(NavigateTo(pageUrlGenerator.GenerateUrl(typeof(IndexedContent), id.ToString())));
-        }
+        => Task.FromResult(NavigateTo(pageUrlGenerator.GenerateUrl(typeof(IndexedContent), id.ToString())));
 
 
         /// <summary>
@@ -117,7 +103,7 @@ namespace Kentico.Xperience.Lucene.Admin
             if (index == null)
             {
                 return ResponseFrom(result)
-                    .AddErrorMessage(String.Format(LocalizationService.GetString("integrations.lucene.error.noindex"), id));
+                    .AddErrorMessage(string.Format(LocalizationService.GetString("integrations.lucene.error.noindex"), id));
             }
 
             try
@@ -126,13 +112,13 @@ namespace Kentico.Xperience.Lucene.Admin
                 return ResponseFrom(result)
                     .AddSuccessMessage(LocalizationService.GetString("integrations.lucene.listing.messages.rebuilding"));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 EventLogService.LogException(nameof(IndexListing), nameof(Rebuild), ex);
                 return ResponseFrom(result)
-                    .AddErrorMessage(String.Format(LocalizationService.GetString("integrations.lucene.listing.messages.rebuilderror"), index.IndexName));
+                    .AddErrorMessage(string.Format(LocalizationService.GetString("integrations.lucene.listing.messages.rebuilderror"), index.IndexName));
             }
-            
+
         }
 
 
@@ -174,9 +160,9 @@ namespace Kentico.Xperience.Lucene.Admin
 
         private static void AddMissingStatistics(ref ICollection<LuceneIndexStatisticsViewModel> statistics)
         {
-            foreach (var indexName in IndexStore.Instance.GetAllIndexes().Select(i => i.IndexName))
+            foreach (string indexName in IndexStore.Instance.GetAllIndexes().Select(i => i.IndexName))
             {
-                if (!statistics.Any(stat => stat.Name.Equals(indexName, StringComparison.OrdinalIgnoreCase)))
+                if (!statistics.Any(stat => stat.Name?.Equals(indexName, StringComparison.OrdinalIgnoreCase) ?? false))
                 {
                     statistics.Add(new LuceneIndexStatisticsViewModel
                     {
@@ -196,26 +182,23 @@ namespace Kentico.Xperience.Lucene.Admin
                 return statistics;
             }
 
-            return statistics.Where(stat => stat.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            return statistics.Where(stat => stat.Name?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false);
         }
 
 
         private Row GetRow(LuceneIndexStatisticsViewModel statistics)
         {
-            var luceneIndex = IndexStore.Instance.GetIndex(statistics.Name);
-            if (luceneIndex == null)
-            {
-                throw new InvalidOperationException($"Unable to retrieve Lucene index with name '{statistics.Name}.'");
-            }
-
-            return new Row
-            {
-                Identifier = luceneIndex.Identifier,
-                Action = new Action(ActionType.Command)
+            var luceneIndex = statistics.Name != null ? IndexStore.Instance.GetIndex(statistics.Name) : null;
+            return luceneIndex == null
+                ? throw new InvalidOperationException($"Unable to retrieve Lucene index with name '{statistics.Name}.'")
+                : new Row
                 {
-                    Parameter = nameof(RowClick)
-                },
-                Cells = new List<Cell>
+                    Identifier = luceneIndex.Identifier,
+                    Action = new Action(ActionType.Command)
+                    {
+                        Parameter = nameof(RowClick)
+                    },
+                    Cells = new List<Cell>
                     {
                         new StringCell
                         {
@@ -247,9 +230,8 @@ namespace Kentico.Xperience.Lucene.Admin
                             }
                         }
                     }
-            };
+                };
         }
-
 
         private static IEnumerable<LuceneIndexStatisticsViewModel> SortStatistics(IEnumerable<LuceneIndexStatisticsViewModel> statistics, LoadDataSettings settings)
         {
@@ -258,11 +240,9 @@ namespace Kentico.Xperience.Lucene.Admin
                 return statistics;
             }
 
-            return settings.SortType switch
-            {
-                SortTypeEnum.Desc => statistics.OrderByDescending(stat => stat.GetType().GetProperty(settings.SortBy).GetValue(stat, null)),
-                _ => statistics.OrderBy(stat => stat.GetType().GetProperty(settings.SortBy).GetValue(stat, null)),
-            };
+            return settings.SortType == SortTypeEnum.Desc ?
+             statistics.OrderByDescending(stat => stat.GetType().GetProperty(settings.SortBy)?.GetValue(stat, null))
+             : statistics.OrderBy(stat => stat.GetType().GetProperty(settings.SortBy)?.GetValue(stat, null));
         }
     }
 }

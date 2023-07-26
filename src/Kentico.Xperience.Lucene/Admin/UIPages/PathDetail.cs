@@ -1,9 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-using CMS.Core;
+﻿using CMS.Core;
 using CMS.DataEngine;
 using CMS.DocumentEngine;
 
@@ -20,7 +15,7 @@ namespace Kentico.Xperience.Lucene.Admin
     [UIPageLocation(PageLocationEnum.Dialog)]
     internal class PathDetail : Page<PathDetailPageClientProperties>
     {
-        private IncludedPathAttribute pathToDisplay;
+        private IncludedPathAttribute? pathToDisplay;
 
 
         /// <summary>
@@ -39,7 +34,9 @@ namespace Kentico.Xperience.Lucene.Admin
         /// The internal <see cref="IncludedPathAttribute.Identifier"/> of the indexed path to display the details of.
         /// </summary>
         [PageParameter(typeof(StringPageModelBinder))]
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public string PathIdentifier
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
             get;
             set;
@@ -49,7 +46,7 @@ namespace Kentico.Xperience.Lucene.Admin
         /// <inheritdoc/>
         public override Task<PathDetailPageClientProperties> ConfigureTemplateProperties(PathDetailPageClientProperties properties)
         {
-            properties.AliasPath = pathToDisplay.AliasPath;
+            properties.AliasPath = pathToDisplay!.AliasPath;
             properties.Columns = new Column[] {
                 new Column
                 {
@@ -74,8 +71,8 @@ namespace Kentico.Xperience.Lucene.Admin
         {
             try
             {
-                var includedContentTypes = pathToDisplay.ContentTypes;
-                if (!includedContentTypes.Any())
+                string[]? includedContentTypes = pathToDisplay?.ContentTypes;
+                if (includedContentTypes == null || !includedContentTypes.Any())
                 {
                     includedContentTypes = DocumentTypeHelper.GetDocumentTypeClasses()
                         .OnSite(SiteService.CurrentSite?.SiteID)
@@ -114,14 +111,15 @@ namespace Kentico.Xperience.Lucene.Admin
             var index = IndexStore.Instance.GetIndex(IndexIdentifier);
             if (index == null)
             {
-                return Task.FromResult(new PageValidationResult {
+                return Task.FromResult(new PageValidationResult
+                {
                     IsValid = false,
                     ErrorMessageKey = "integrations.lucene.error.noindex",
                     ErrorMessageParams = new object[] { IndexIdentifier }
                 });
             }
 
-            pathToDisplay = index.IncludedPaths.SingleOrDefault(attr => attr.Identifier.Equals(PathIdentifier, StringComparison.OrdinalIgnoreCase));
+            pathToDisplay = index.IncludedPaths.SingleOrDefault(attr => attr.Identifier?.Equals(PathIdentifier, StringComparison.OrdinalIgnoreCase) ?? false);
             if (pathToDisplay == null)
             {
                 return Task.FromResult(new PageValidationResult

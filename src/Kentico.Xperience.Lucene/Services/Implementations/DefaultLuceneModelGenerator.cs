@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 using CMS.Core;
 using CMS.DataEngine;
 using CMS.DocumentEngine;
@@ -12,10 +8,6 @@ using CMS.MediaLibrary;
 using Kentico.Content.Web.Mvc;
 using Kentico.Xperience.Lucene.Attributes;
 using Kentico.Xperience.Lucene.Models;
-using Lucene.Net.Documents;
-using Lucene.Net.Index;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Kentico.Xperience.Lucene.Services
 {
@@ -53,11 +45,12 @@ namespace Kentico.Xperience.Lucene.Services
         /// <inheritdoc/>
         public async Task<LuceneSearchModel> GetTreeNodeData(LuceneQueueItem queueItem)
         {
-            var luceneIndex = IndexStore.Instance.GetIndex(queueItem.IndexName);
+            var luceneIndex = IndexStore.Instance.GetIndex(queueItem.IndexName) ?? throw new Exception($"LuceneIndex {queueItem.IndexName} not found!");
 
-            var data =  Activator.CreateInstance(luceneIndex.LuceneSearchModelType) as LuceneSearchModel;
-            await MapChangedProperties(luceneIndex, queueItem, data);
-            MapCommonProperties(queueItem.Node, data);
+            var data = Activator.CreateInstance(luceneIndex.LuceneSearchModelType) as LuceneSearchModel ?? throw new Exception($"Faild to create instance of {luceneIndex.LuceneSearchModelType}");
+
+            await MapChangedProperties(luceneIndex, queueItem, data!);
+            MapCommonProperties(queueItem.Node, data!);
             data = await luceneIndex.LuceneIndexingStrategy.OnIndexingNode(queueItem.Node, data);
             return data;
         }
@@ -73,8 +66,8 @@ namespace Kentico.Xperience.Lucene.Services
         /// <returns>An list of absolute URLs, or an empty list.</returns>
         private IEnumerable<string> GetAssetUrlsForColumn(TreeNode node, object nodeValue, string columnName)
         {
-            var strValue = conversionService.GetString(nodeValue, String.Empty);
-            if (String.IsNullOrEmpty(strValue))
+            string strValue = conversionService.GetString(nodeValue, string.Empty);
+            if (string.IsNullOrEmpty(strValue))
             {
                 return Enumerable.Empty<string>();
             }
@@ -114,7 +107,7 @@ namespace Kentico.Xperience.Lucene.Services
         /// <returns>The database columns that are indexed.</returns>
         private string[] GetIndexedColumnNames(LuceneIndex luceneIndex)
         {
-            if (cachedIndexedColumns.TryGetValue(luceneIndex.IndexName, out string[] value))
+            if (cachedIndexedColumns.TryGetValue(luceneIndex.IndexName, out string[]? value))
             {
                 return value;
             }
@@ -138,7 +131,7 @@ namespace Kentico.Xperience.Lucene.Services
             // Remove column names from LuceneSearchModel that aren't database columns
             indexedColumnNames.RemoveAll(col => ignoredPropertiesForTrackingChanges.Contains(col));
 
-            var indexedColumns = indexedColumnNames.ToArray();
+            string[] indexedColumns = indexedColumnNames.ToArray();
             cachedIndexedColumns.Add(luceneIndex.IndexName, indexedColumns);
 
             return indexedColumns;
@@ -154,15 +147,15 @@ namespace Kentico.Xperience.Lucene.Services
         /// <param name="indexingStrategy">The indexing strategy.</param>
         /// <param name="columnsToUpdate">A list of columns to retrieve values for. Columns not present
         /// in this list will return <c>null</c>.</param>
-        private async Task<object> GetNodeValue(TreeNode node, PropertyInfo property, ILuceneIndexingStrategy indexingStrategy, IEnumerable<string> columnsToUpdate)
+        private async Task<object?> GetNodeValue(TreeNode node, PropertyInfo property, ILuceneIndexingStrategy indexingStrategy, IEnumerable<string> columnsToUpdate)
         {
-            object nodeValue = null;
-            var usedColumn = property.Name;
+            object? nodeValue = null;
+            string usedColumn = property.Name;
             if (Attribute.IsDefined(property, typeof(SourceAttribute)))
             {
                 // Property uses SourceAttribute, loop through column names until a non-null value is found
                 var sourceAttribute = property.GetCustomAttributes<SourceAttribute>(false).FirstOrDefault();
-                foreach (var source in sourceAttribute.Sources.Where(s => columnsToUpdate.Contains(s)))
+                foreach (string? source in sourceAttribute!.Sources.Where(s => columnsToUpdate.Contains(s)))
                 {
                     nodeValue = node.GetValue(source);
                     if (nodeValue != null)
@@ -201,8 +194,8 @@ namespace Kentico.Xperience.Lucene.Services
         private async Task MapChangedProperties(LuceneIndex luceneIndex, LuceneQueueItem queueItem, LuceneSearchModel data)
         {
             var columnsToUpdate = new List<string>();
-            var indexedColumns = GetIndexedColumnNames(luceneIndex);
-            if (queueItem.TaskType == LuceneTaskType.CREATE || queueItem.TaskType == LuceneTaskType.UPDATE)
+            string[] indexedColumns = GetIndexedColumnNames(luceneIndex);
+            if (queueItem.TaskType is LuceneTaskType.CREATE or LuceneTaskType.UPDATE)
             {
                 columnsToUpdate.AddRange(indexedColumns);
             }
@@ -210,12 +203,12 @@ namespace Kentico.Xperience.Lucene.Services
             var properties = luceneIndex.LuceneSearchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             foreach (var prop in properties)
             {
-                object nodeValue = await GetNodeValue(queueItem.Node, prop, luceneIndex.LuceneIndexingStrategy, columnsToUpdate);
+                object? nodeValue = await GetNodeValue(queueItem.Node, prop, luceneIndex.LuceneIndexingStrategy, columnsToUpdate);
                 if (nodeValue == null)
                 {
                     continue;
                 }
- 
+
                 // TODO: map based on PropertyType
                 if (Attribute.IsDefined(prop, typeof(TextFieldAttribute)))
                 {
@@ -270,7 +263,7 @@ namespace Kentico.Xperience.Lucene.Services
                 // GetAbsoluteUrl can throw an exception when processing a page update LuceneQueueItem
                 // and the page was deleted before the update task has processed. In this case, upsert an
                 // empty URL
-                url = String.Empty;
+                url = string.Empty;
             }
 
             data.Url = url;

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-
-using Kentico.Xperience.Admin.Base;
+﻿using Kentico.Xperience.Admin.Base;
 using Kentico.Xperience.Lucene.Models;
 
 namespace Kentico.Xperience.Lucene.Admin
@@ -26,17 +23,16 @@ namespace Kentico.Xperience.Lucene.Admin
         public override Task<TemplateClientProperties> ConfigureTemplateProperties(TemplateClientProperties properties)
         {
             var index = IndexStore.Instance.GetIndex(IndexIdentifier);
-            if (index == null)
+            if (index != null)
             {
-                throw new InvalidOperationException($"Unable to retrieve Lucene index with identifier '{IndexIdentifier}.'");
+                properties.Breadcrumbs.Label = index.IndexName;
+                properties.Breadcrumbs.IsSignificant = true;
+                properties.Navigation.Headline = index.IndexName;
+                properties.Navigation.IsSignificant = true;
+
+                return base.ConfigureTemplateProperties(properties);
             }
-
-            properties.Breadcrumbs.Label = index.IndexName;
-            properties.Breadcrumbs.IsSignificant = true;
-            properties.Navigation.Headline = index.IndexName;
-            properties.Navigation.IsSignificant = true;
-
-            return base.ConfigureTemplateProperties(properties);
+            throw new InvalidOperationException($"Unable to retrieve Lucene index with identifier '{IndexIdentifier}.'");
         }
     }
 }

@@ -7,7 +7,7 @@ namespace Kentico.Xperience.Lucene.Attributes
     /// A field that is indexed and tokenized, without term vectors.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public sealed class TextFieldAttribute : FieldAttributeBase
+    public sealed class TextFieldAttribute : BaseFieldAttribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="TextFieldAttribute"/> class.

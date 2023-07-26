@@ -1,17 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-using CMS.Core;
-using CMS.DataEngine;
+﻿using CMS.Core;
 using CMS.DocumentEngine;
 using CMS.WorkflowEngine;
 
 using Kentico.Xperience.Lucene.Models;
-
-using Newtonsoft.Json.Linq;
 
 namespace Kentico.Xperience.Lucene.Services
 {
@@ -41,7 +32,7 @@ namespace Kentico.Xperience.Lucene.Services
         /// <inheritdoc />
         public async Task<int> ProcessLuceneTasks(IEnumerable<LuceneQueueItem> queueItems, CancellationToken cancellationToken)
         {
-            var successfulOperations = 0;
+            int successfulOperations = 0;
 
             // Group queue items based on index name
             var groups = queueItems.GroupBy(item => item.IndexName);
@@ -49,13 +40,11 @@ namespace Kentico.Xperience.Lucene.Services
             {
                 try
                 {
-                    var luceneIndex = IndexStore.Instance.GetIndex(group.Key);
-
                     var deleteIds = new List<string>();
                     var deleteTasks = group.Where(queueItem => queueItem.TaskType == LuceneTaskType.DELETE);
-                    deleteIds.AddRange(GetIdsToDelete(luceneIndex, deleteTasks));
+                    deleteIds.AddRange(GetIdsToDelete(deleteTasks));
 
-                    var updateTasks = group.Where(queueItem => queueItem.TaskType == LuceneTaskType.UPDATE || queueItem.TaskType == LuceneTaskType.CREATE);
+                    var updateTasks = group.Where(queueItem => queueItem.TaskType is LuceneTaskType.UPDATE or LuceneTaskType.CREATE);
                     var upsertData = new List<LuceneSearchModel>();
                     foreach (var queueItem in updateTasks)
                     {
@@ -63,7 +52,7 @@ namespace Kentico.Xperience.Lucene.Services
                         upsertData.Add(data);
                     }
 
-                    successfulOperations += await luceneClient.DeleteRecords(deleteIds, group.Key, cancellationToken);
+                    successfulOperations += await luceneClient.DeleteRecords(deleteIds, group.Key);
                     successfulOperations += await luceneClient.UpsertRecords(upsertData, group.Key, cancellationToken);
                 }
                 catch (Exception ex)
@@ -75,9 +64,6 @@ namespace Kentico.Xperience.Lucene.Services
             return successfulOperations;
         }
 
-        private IEnumerable<string> GetIdsToDelete(LuceneIndex luceneIndex, IEnumerable<LuceneQueueItem> deleteTasks)
-        {
-            return deleteTasks.Select(queueItem => queueItem.Node.DocumentID.ToString());
-        }
+        private IEnumerable<string> GetIdsToDelete(IEnumerable<LuceneQueueItem> deleteTasks) => deleteTasks.Select(queueItem => queueItem.Node.DocumentID.ToString());
     }
 }
