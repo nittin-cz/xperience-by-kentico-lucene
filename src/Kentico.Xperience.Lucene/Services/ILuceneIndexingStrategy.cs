@@ -1,7 +1,6 @@
 ﻿using CMS.DocumentEngine;
 using Kentico.Xperience.Lucene.Attributes;
 using Kentico.Xperience.Lucene.Models;
-using Lucene.Net.Documents;
 using System.Threading.Tasks;
 
 namespace Kentico.Xperience.Lucene.Services
@@ -29,5 +28,12 @@ namespace Kentico.Xperience.Lucene.Services
         /// <param name="model">The resulting search data <see cref="LuceneSearchModel"/> to be modified. The model could be changed during the process.</param>
         /// <returns>Modified Lucene document.</returns>
         Task<LuceneSearchModel> OnIndexingNode(TreeNode node, LuceneSearchModel model);
+
+        /// <summary>
+        /// Called when indexing a search model. Could be used to disable indexing of documents that match the scope, but should not be indexed e.g. error pages.
+        /// </summary>
+        /// <param name="node">The <see cref="TreeNode"/> currently being indexed.</param>
+        /// <returns>bool</returns>
+        bool ShouldIndexNode(TreeNode node);
     }
 }

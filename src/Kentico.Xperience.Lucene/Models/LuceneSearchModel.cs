@@ -15,7 +15,6 @@ namespace Kentico.Xperience.Lucene.Models
         /// <summary>
         /// The internal Lucene ID of this search record.
         /// </summary>
-        [Retrievable]
         [StringField(true)]
         public string ObjectID
         {
@@ -27,7 +26,6 @@ namespace Kentico.Xperience.Lucene.Models
         /// <summary>
         /// The name of the Xperience class to which the indexed data belongs.
         /// </summary>
-        [Retrievable]
         [StringField(true)]
         public string ClassName
         {
@@ -39,7 +37,6 @@ namespace Kentico.Xperience.Lucene.Models
         /// <summary>
         /// The absolute live site URL of the indexed page.
         /// </summary>
-        [Retrievable]
         [StringField(true)]
         public string Url
         {

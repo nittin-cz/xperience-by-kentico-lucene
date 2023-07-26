@@ -10,6 +10,5 @@
         /// </summary>
         public const string SECTION_NAME = "xperience.lucene";
 
-
     }
 }

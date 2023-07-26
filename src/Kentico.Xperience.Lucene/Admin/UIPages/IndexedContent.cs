@@ -128,9 +128,12 @@ namespace Kentico.Xperience.Lucene.Admin
 
         private static Row GetProperty(PropertyInfo property)
         {
-            var isSearchable = Attribute.IsDefined(property, typeof(SearchableAttribute));
-            var isRetrievable = Attribute.IsDefined(property, typeof(RetrievableAttribute));
+            //var isSearchable = Attribute.IsDefined(property, typeof(SearchableAttribute));
+            //var isRetrievable = Attribute.IsDefined(property, typeof(RetrievableAttribute));
             //var isFacetable = Attribute.IsDefined(property, typeof(FacetableAttribute));
+            // TODO: read from attributes
+            var isSearchable = false;
+            var isRetrievable = false;
             var hasSources = Attribute.IsDefined(property, typeof(SourceAttribute));
             var hasUrls = Attribute.IsDefined(property, typeof(MediaUrlsAttribute));
             return new Row

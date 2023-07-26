@@ -20,5 +20,11 @@ namespace Kentico.Xperience.Lucene.Services.Implementations
         {
             return Task.FromResult(model);
         }
+
+        /// <inheritdoc />
+        public virtual bool ShouldIndexNode(TreeNode node)
+        {
+            return true;
+        }
     }
 }

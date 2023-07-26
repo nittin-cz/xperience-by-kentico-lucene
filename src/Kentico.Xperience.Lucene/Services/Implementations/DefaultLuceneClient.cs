@@ -161,7 +161,7 @@ namespace Kentico.Xperience.Lucene.Services
             var indexedNodes = new List<TreeNode>();
             foreach (var includedPathAttribute in luceneIndex.IncludedPaths)
             {
-                var nodes = await pageRetriever.RetrieveMultipleAsync(q =>
+                var nodes = (await pageRetriever.RetrieveMultipleAsync(q =>
                 {
                     if (includedPathAttribute.ContentTypes.Length > 0)
                     {
@@ -173,7 +173,8 @@ namespace Kentico.Xperience.Lucene.Services
                         .WithCoupledColumns();
 
                     q.AllCultures();
-                }, cancellationToken: cancellationToken);
+                }, cancellationToken: cancellationToken))
+                .Where(node => luceneIndex.LuceneIndexingStrategy.ShouldIndexNode(node));
 
                 indexedNodes.AddRange(nodes);
             }

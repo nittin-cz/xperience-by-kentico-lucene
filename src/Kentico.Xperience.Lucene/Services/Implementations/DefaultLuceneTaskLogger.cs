@@ -3,7 +3,6 @@ using System.Linq;
 
 using CMS.Core;
 using CMS.DocumentEngine;
-using CMS.SiteProvider;
 
 using Kentico.Xperience.Lucene.Extensions;
 using Kentico.Xperience.Lucene.Models;
@@ -45,7 +44,7 @@ namespace Kentico.Xperience.Lucene.Services
                     continue;
                 }
 
-                LogIndexTask(new LuceneQueueItem(node, taskType, indexName, node.ChangedColumns()));
+                LogIndexTask(new LuceneQueueItem(node, taskType, indexName));
             }
         }
 

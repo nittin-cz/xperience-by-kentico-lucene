@@ -55,6 +55,10 @@ namespace Kentico.Xperience.Lucene.Extensions
                 return false;
             }
 
+            if (!luceneIndex.LuceneIndexingStrategy.ShouldIndexNode(node)) { 
+                return false;
+            }
+
             return luceneIndex.IncludedPaths.Any(includedPathAttribute => {
                 var matchesContentType = includedPathAttribute.ContentTypes.Length == 0 || includedPathAttribute.ContentTypes.Contains(node.ClassName);
                 if (includedPathAttribute.AliasPath.EndsWith("/%"))

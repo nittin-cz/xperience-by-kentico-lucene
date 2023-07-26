@@ -20,8 +20,7 @@ namespace Kentico.Xperience.Lucene.Extensions
         /// <param name="services">The service collection.</param>
         /// <param name="configuration">The application configuration.</param>
         /// <param name="indexes">The Lucene indexes to register.</param>
-        /// <param name="crawlers">The Lucene crawlers to register.</param>
-        public static IServiceCollection AddLucene(this IServiceCollection services, IConfiguration configuration, LuceneIndex[] indexes = null, string[] crawlers = null)
+        public static IServiceCollection AddLucene(this IServiceCollection services, IConfiguration configuration, LuceneIndex[] indexes = null)
         {
             if (indexes != null)
             {
@@ -33,7 +32,7 @@ namespace Kentico.Xperience.Lucene.Extensions
             //    Array.ForEach(crawlers, crawlerId => IndexStore.Instance.AddCrawler(crawlerId));
             //}
 
-            services.AddHttpClient();
+            //services.AddHttpClient();
             return services;
         }
     }

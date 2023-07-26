@@ -34,6 +34,7 @@ namespace Kentico.Xperience.Lucene.Services.Implementations
         protected void MapModelProps(LuceneIndex luceneIndex, LuceneSearchModel model, Document document)
         {
             var properties = luceneIndex.LuceneSearchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+           
             foreach (var prop in properties)
             {
                 try

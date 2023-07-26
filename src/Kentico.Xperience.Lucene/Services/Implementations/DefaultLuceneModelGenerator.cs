@@ -196,9 +196,7 @@ namespace Kentico.Xperience.Lucene.Services
 
         /// <summary>
         /// Adds values to the <paramref name="data"/> by retriving the indexed columns of the index
-        /// and getting values from the <see cref="LuceneQueueItem.Node"/>. When the <see cref="LuceneQueueItem.TaskType"/>
-        /// is <see cref="LuceneTaskType.UPDATE"/>, only the <see cref="LuceneQueueItem.ChangedColumns"/>
-        /// will be added to the <paramref name="data"/>.
+        /// and getting values from the <see cref="LuceneQueueItem.Node"/>.
         /// </summary>
         private async Task MapChangedProperties(LuceneIndex luceneIndex, LuceneQueueItem queueItem, LuceneSearchModel data)
         {
@@ -208,10 +206,6 @@ namespace Kentico.Xperience.Lucene.Services
             {
                 columnsToUpdate.AddRange(indexedColumns);
             }
-            //else if (queueItem.TaskType == LuceneTaskType.UPDATE)
-            //{
-            //    columnsToUpdate.AddRange(queueItem.ChangedColumns.Intersect(indexedColumns));
-            //}
 
             var properties = luceneIndex.LuceneSearchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             foreach (var prop in properties)
