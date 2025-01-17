@@ -2,38 +2,129 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": ".NET: build (Solution)",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": ".NET: build (Solution) - LOCAL_NUGET",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "-p:LOCAL_NUGET=true",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": ".NET: rebuild (Solution)",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "--no-incremental",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": ".NET: clean (Solution)",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "clean",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": ".NET: test (Solution)",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "test",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": ".NET: format (Lucene)",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "format",
+        "Kentico.Xperience.Lucene.sln",
+        "--exclude",
+        "./examples/**"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": ".NET: pack (Lucene)",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "pack",
+        "./src/Kentico.Xperience.Lucene",
+        "-c",
+        "Release",
+        "-o",
+        "nuget-local",
+        "-p:SIGN_FILE=false"
+      ],
+      "problemMatcher": "$msCompile",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": ".NET: watch (DancingGoat)",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "watch",
+        "run",
+        "--project",
+        "${workspaceFolder}/examples/DancingGoat/DancingGoat.csproj"
+      ],
+      "options": {
+        "env": {
+          "DOTNET_WATCH_RESTART_ON_RUDE_EDIT": "true"
+        }
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": ".NET: run (DancingGoat)",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/examples/DancingGoat/DancingGoat.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+      "isBackground": true
+    },
+    {
       "type": "npm",
       "script": "install",
       "path": "src/Kentico.Xperience.Lucene/Admin/Client",
-      "group": "clean",
+      "group": "build",
       "problemMatcher": [],
       "label": "npm: install - src/Kentico.Xperience.Lucene/Admin/Client",
       "detail": "install dependencies from package"
-    },
-    {
-      "type": "dotnet",
-      "task": "build",
-      "problemMatcher": ["$msCompile"],
-      "group": "build",
-      "label": "dotnet: build"
-    },
-    {
-      "type": "shell",
-      "command": "dotnet",
-      "args": ["format"],
-      "problemMatcher": ["$msCompile"],
-      "group": "none",
-      "options": {
-        "cwd": "${workspaceFolder}/src/Kentico.Xperience.Lucene/"
-      },
-      "label": "dotnet: format"
-    },
-    {
-      "type": "dotnet",
-      "task": "clean",
-      "problemMatcher": ["$msCompile"],
-      "group": "clean",
-      "label": "dotnet: clean"
     },
     {
       "type": "npm",
@@ -60,23 +151,6 @@
       "problemMatcher": [],
       "label": "npm: start - src/Kentico.Xperience.Lucene/Admin/Client",
       "detail": "webpack serve --mode development"
-    },
-    {
-      "label": "dotnet: watch DancingGoat",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "watch",
-        "run",
-        "--project",
-        "${workspaceFolder}/src/Kentico.Xperience.Lucene.Sample/DancingGoat.csproj"
-      ],
-      "options": {
-        "env": {
-          "DOTNET_WATCH_RESTART_ON_RUDE_EDIT": "true"
-        }
-      },
-      "problemMatcher": "$msCompile"
     }
   ]
 }

@@ -1,186 +1,56 @@
 # Usage Guide
 
-## Detailed Setup
+This library supports using Lucene.NET to index both unstructured and high structured, interrelated content in an Xperience by Kentico solution. This indexed content can then be programmatically queried and displayed in a website channel.
 
-### Create a Search Model
+Below are the steps to integrate the library into your solution.
 
-Define a custom (or multiple) `LuceneSearchModel` implementation to represent the content you want index.
+## Create a custom Indexing Strategy
 
-```csharp
-[IncludedPath("/%", ContentTypes = new string[] {
-    AboutUs.CLASS_NAME,
-    Home.CLASS_NAME,
-})]
-public class DancingGoatSearchModel : LuceneSearchModel
-{
-    public const string IndexName = "DancingGoat";
+See [Custom index strategy](Custom-index-strategy.md)
 
-    [TextField(true)]
-    [Source(new string[] { nameof(TreeNode.DocumentName) })]
-    public string Title { get; set; }
+## Continuous Integration
 
-    [TextField(false)]
-    public string Content { get; set; }
-}
-```
+When starting your application for the first time after adding this library to your solution, a custom module and custom module classes will automatically be created
+to support managing search index configuration within the administration UI.
 
-### Create a custom Indexing Strategy (optional)
+If you do not see new items added to your [CI repository](https://docs.xperience.io/x/FAKQC) for the new auto-generated Lucene search data types, stop your application and perform a [CI store](https://docs.xperience.io/xp/developers-and-admins/ci-cd/continuous-integration#ContinuousIntegration-Storeobjectdatatotherepository) to add the library's custom module configuration to the CI repository.
 
-Define a custom `DefaultLuceneIndexingStrategy` implementation to customize how page content/fields are processed for the index.
+You should now be able to run a [CI restore](https://docs.xperience.io/xp/developers-and-admins/ci-cd/continuous-integration#ContinuousIntegration-Restorerepositoryfilestothedatabase).
+Attempting to run a CI restore without the CI files in the CI repository will result in a SQL error during the restore.
 
-```csharp
-public class DancingGoatLuceneIndexingStrategy : DefaultLuceneIndexingStrategy
-{
-    public override async Task<object> OnIndexingProperty(TreeNode node, string propertyName, string usedColumn, object foundValue)
-    {
-        object result = foundValue;
+When team members are merging changes that include the addition of this library, they _must_ first run a CI restore to ensure they have the same object metadata for the search custom module as your database.
 
-        // Additional processing of the value
+Future updates to indexes will be tracked in the CI repository [unless they are excluded](https://docs.xperience.io/x/ygAcCQ).
 
-        return result;
-    }
-}
-```
+## Managing search indexes
 
-This indexing strategy allows you to hook into the indexing process by overriding the following methods of the `DefaultLuceneIndexingStrategy`:
+See [Managing search indexes](Managing-Indexes.md)
 
-- `OnIndexingProperty`
-- `OnIndexingNode`
-- `OnDocumentAddField`
-- `FacetsConfigFactory`
-- `ShouldIndexNode`
+## Search index querying
 
-> For more details, review the `DancingGoatLuceneIndexingStrategy` in the sample project.
+See [Search index querying](Search-index-querying.md)
 
-### Register the Search Index
+## Using Lucene Analyzer
 
-Add this library to the application services, registering your custom `LuceneSearchModel`.
+See [Text analyzing](Text-analyzing.md)
 
-```csharp
-var builder = WebApplication.CreateBuilder(args);
-
-// ...
-
-builder.Services.AddLucene(new[]
-{
-    new LuceneIndex(
-        typeof(MySearchModel),
-        new StandardAnalyzer(Lucene.Net.Util.LuceneVersion.LUCENE_48),
-        MySearchModel.IndexName,
-        luceneIndexingStrategy: new MyCustomIndexingStrategy()),
-});
-```
-
-You can add as many indexes as you want. Each index can have a different set of fields or store data for different [Content Types](https://docs.xperience.io/xp26/developers-and-admins/development/content-types).
-
-### Rebuild the Search Index
-
-The index will initially be empty until you create or modify some content.
-
-To index all existing content, rebuild the index in Xperience's Administration within the Search application added by this library.
-
-### Retrieve Content
-
-Use the `ILuceneIndexService` (via DI) to retrieve the index populated by your custom `LuceneSearchModel`.
-
-```csharp
-public class DancingGoatSearchService
-{
-    private readonly ILuceneIndexService luceneIndexService;
-
-    public DancingGoatSearchService(ILuceneIndexService luceneIndexService) =>
-        this.luceneIndexService = luceneIndexService;
-
-    public LuceneSearchResultModel<DancingGoatSearchModel> Search(
-        string searchText, int pageSize = 20, int page = 1)
-    {
-        var index = IndexStore
-            .Instance
-            .GetIndex(DancingGoatSearchModel.IndexName);
-
-        // ...
-    }
-}
-```
-
-Then, execute a search with a customized Lucene `Query` (like the `MatchAllDocsQuery`) using the ILuceneIndexService.
-
-```csharp
-// ...
-
-var results = luceneIndexService.UseSearcher(index, (searcher) =>
-{
-    var topDocs = searcher.Search(query, MAX_RESULTS);
-
-    return new LuceneSearchResultModel<DancingGoatSearchModel>()
-    {
-        Query = searchText,
-        Page = page,
-        PageSize = pageSize,
-        TotalPages = topDocs.TotalHits <= 0 ? 0 : ((topDocs.TotalHits - 1) / pageSize) + 1,
-        TotalHits = topDocs.TotalHits,
-        Hits = topDocs.ScoreDocs
-            .Skip(offset)
-            .Take(limit)
-            .Select(d => MapToResultItem(searcher.Doc(d.Doc)))
-            .ToList(),
-    };
-}
-```
-
-> For a more advanced example, see the `CafeSearchService` in the sample project.
-
-### Display Results
-
-Finally, display the strongly typed search results in a Razor View.
-
-```xml
-@foreach (var item in Model.Hits)
-{
-    <div class="row search-tile">
-        <div class="col-md-8 col-lg-9 search-tile-content">
-            <h3 class="h4 search-tile-title">
-                <a href="@item.Url">@item.Title</a>
-            </h3>
-            <div class="search-tile-subtitle">@item.PublishedDate</div>
-        </div>
-    </div>
-}
-```
-
-### Implementing document decay
+## Implementing document decay
 
 You can score indexed items by "freshness" or "recency" using several techniques, each with different tradeoffs.
 
 1. Boost relevant fields by setting field boost (preferable method, but requires more work).
-2. Boost one field with constant value, that is always present in search query (shown in sample, less desirable method.
+2. Boost one field with constant value, that is always present in search query (shown in the example project, less desirable method.
 
    The Downside of this method is that all documents get matched, usable only for scenarios where total number of result is not required).
 
 3. Use a sort expression. Implementation details can be found in Lucene.NET unit tests, Lucene.NET implementations
 
-Methods 1 and 2 require implementing `DefaultLuceneIndexingStrategy` and overriding `OnDocumentAddField` method.
-In `OnDocumentAddField` match required fields and calculate boost, then apply to desired files as shown in example `DancingGoatLuceneIndexingStrategy.OnDocumentAddField`
-
 > Small differences in boosts will be ignored by Lucene.
 
-### Sample features
+## Auto-scaling Support
 
-#### Trigger rebuild of index via webhook
+See [Auto-Scaling](Auto-Scaling.md)
 
-Rebuild of index could be triggered by calling `POST` on webhook `/search/rebuild` with body
+## Upgrades and Uninstalling
 
-```json
-{
-  "indexName": "...",
-  "secret": "..."
-}
-```
-
-This could be used to trigger regular reindexing of content via CRON, Windows Task Scheduler or any other external scheduler.
-
-## Additional Resources
-
-- Review the "Search" functionality in the `src\Kentico.Xperience.Lucene.Sample` Dancing Goat project to see how to implement search.
-- Read the Lucene.NET [introduction](https://lucenenet.apache.org/) or [full documentation](https://lucenenet.apache.org/docs/4.8.0-beta00016/) to explore the core library's APIs and functionality.
-- Explore the [Lucene.NET source on GitHub](https://github.com/apache/lucenenet)
+See [Upgrades](Upgrades.md)
