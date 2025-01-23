@@ -5,7 +5,7 @@
     <Authors>$(Company)</Authors>
     <Copyright>Copyright © $(Company) $([System.DateTime]::Now.Year)</Copyright>
     <Trademark>$(Company)™</Trademark>
-    <VersionPrefix>2.0.1</VersionPrefix>
+    <VersionPrefix>11.0.1</VersionPrefix>
     <VersionSuffix></VersionSuffix>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
 
@@ -18,26 +18,24 @@
 
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)\images\logo.png" Pack="true" Visible="false" PackagePath="" />
-    <None Include="$(MSBuildThisFileDirectory)\README.md" Pack="true" PackagePath=""/>
+    <None Include="$(MSBuildThisFileDirectory)\README.md" Pack="true" Visible="false" PackagePath=""/>
   </ItemGroup>
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <WarningsAsErrors>nullable</WarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <CopyDocumentationFilesFromPackages>true</CopyDocumentationFilesFromPackages>
     <CopyDebugSymbolFilesFromPackages>true</CopyDebugSymbolFilesFromPackages>
-    <NoWarn>$(NoWarn);1591</NoWarn>
-
+    <NoWarn>$(NoWarn);1591;S3267;S1133;S4144</NoWarn>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <TimestampServerUrl>http://timestamp.digicert.com</TimestampServerUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition=" $(Configuration) == 'Release' ">
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>

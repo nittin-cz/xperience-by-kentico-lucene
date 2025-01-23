@@ -1,33 +1,53 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": ".NET Core Launch (web)",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/Kentico.Xperience.Lucene.Sample/bin/Debug/net6.0/DancingGoat.dll",
-            "args": [],
-            "cwd": "${workspaceFolder}/src/Kentico.Xperience.Lucene.Sample",
-            "stopAtEntry": false,
-            "serverReadyAction": {
-                "action": "openExternally",
-                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
-            },
-            "env": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
-            },
-            "sourceFileMap": {
-                "/Views": "${workspaceFolder}/Views"
-            }
-        },
-        {
-            "name": ".NET Core Attach",
-            "type": "coreclr",
-            "request": "attach"
-        }
-    ]
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": ".NET Launch (DancingGoat)",
+      "type": "coreclr",
+      "request": "launch",
+      "launchBrowser": {
+        "enabled": false
+      },
+      "launchSettingsProfile": "DancingGoat",
+      "preLaunchTask": ".NET: build (Solution)",
+      "program": "${workspaceFolder}/examples/DancingGoat/bin/Debug/net6.0/DancingGoat.dll",
+      "cwd": "${workspaceFolder}/examples/DancingGoat",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "sourceFileMap": {
+        "/Views": "${workspaceFolder}/Views"
+      }
+    },
+    {
+      "name": ".NET Launch (DancingGoat) - LOCAL_NUGET",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": ".NET: build (Solution) - LOCAL_NUGET",
+      "program": "${workspaceFolder}/examples/DancingGoat/bin/Debug/net6.0/DancingGoat.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/examples/DancingGoat",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "sourceFileMap": {
+        "/Views": "${workspaceFolder}/Views"
+      }
+    },
+    {
+      "name": ".NET Attach",
+      "type": "coreclr",
+      "request": "attach"
+    }
+  ]
 }
